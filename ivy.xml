@@ -1,0 +1,7 @@
+<ivy-module version="2.0">
+    <info organisation="org.arper" module="turtle-core"/>
+    <dependencies>
+        <dependency org="org.imgscalr" name="imgscalr-lib" rev="4.2" />
+        <dependency org="com.google.guava" name="guava" rev="+" />
+    </dependencies>
+</ivy-module>
