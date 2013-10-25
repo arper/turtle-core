@@ -1,4 +1,4 @@
-package org.asper.turtle.ui;
+package org.arper.turtle.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -28,7 +28,7 @@ import javax.swing.text.DefaultCaret;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 
-import org.arper.turtle.impl.TLUtil;
+import org.arper.turtle.TLUtils;
 
 import com.google.common.base.Function;
 
@@ -36,15 +36,15 @@ import com.google.common.base.Function;
 public class TLConsole extends JPanel {
     public final PrintStream out;
     public final InputStream in;
-    
+
     private final JTextPane textPane;
     private final JScrollPane textScrollPane;
     private final JTextField inputTextField;
-    
+
     public TLConsole() {
         out = new PrintStream(textAreaOut, true);
         in = textAreaIn;
-        
+
         textPane = new JTextPane();
         textPane.setEditable(false);
         textPane.setFont(new Font("Lucida Console", Font.PLAIN, 13));
@@ -52,19 +52,19 @@ public class TLConsole extends JPanel {
         textPane.setPreferredSize(new Dimension(400, 300));
         textPane.setBackground(new Color(255, 250, 245));
         ((DefaultCaret)textPane.getCaret()).setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
-        
+
         inputTextField = new JTextField();
         inputTextField.setFont(new Font("Lucida Console", Font.PLAIN, 13));
-        
-        textScrollPane = new JScrollPane(textPane, 
-                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, 
+
+        textScrollPane = new JScrollPane(textPane,
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                 JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        
-        
+
+
         setLayout(new BorderLayout());
         add(textScrollPane, BorderLayout.CENTER);
         add(inputTextField, BorderLayout.SOUTH);
-        
+
         inputTextField.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -84,7 +84,7 @@ public class TLConsole extends JPanel {
             }
         });
     }
-    
+
     private void doPrint(final String text, final AttributeSet settings) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -107,7 +107,7 @@ public class TLConsole extends JPanel {
             }
         });
     }
-    
+
     public synchronized String readString() {
         return doRead("Empty input. Please enter a string: ",
                 new Function<String, String>() {
@@ -127,12 +127,12 @@ public class TLConsole extends JPanel {
                     }
         });
     }
-    
+
     public synchronized int readInteger(final int min, final int max) {
         if (min >= max) {
             throw new IllegalArgumentException("invalid min/max: " + min + " >= " + max);
         }
-        
+
         return doRead("Invalid. Please enter an integer from " + min + " to " + max + ": ",
                 new Function<String, Integer>() {
                     @Override
@@ -142,7 +142,7 @@ public class TLConsole extends JPanel {
                     }
         });
     }
-    
+
     public synchronized double readDouble() {
         return doRead("Invalid. Please enter a number: ",
                 new Function<String, Double>() {
@@ -152,7 +152,7 @@ public class TLConsole extends JPanel {
                     }
         });
     }
-    
+
     public synchronized boolean readBoolean() {
         return doRead("Invalid. Please enter 'yes' or 'no': ",
                 new Function<String, Boolean>() {
@@ -168,18 +168,18 @@ public class TLConsole extends JPanel {
                     }
         });
     }
-    
-    
+
+
     public synchronized Color readColor() {
         return doRead("Not a recognized color. Try again: ",
                 new Function<String, Color>() {
                     @Override
                     public Color apply(String s) {
-                        return TLUtil.getColorByName(s);
+                        return TLUtils.getColorByName(s);
                     }
         });
     }
-    
+
     private synchronized <T> T doRead(String rePrompt, Function<String, T> verifier) {
         Scanner sc = new Scanner(in);
         while (true) {
@@ -193,14 +193,14 @@ public class TLConsole extends JPanel {
             out.print(rePrompt);
         }
     }
-    
+
     private final BlockingQueue<Byte> inputBuffer = new LinkedBlockingQueue<Byte>();
     private final InputStream textAreaIn = new InputStream() {
         @Override
         public int read(byte[] b, int off, int len) throws IOException {
             if (len == 0)
                 return 0;
-            
+
             int count = 0;
             do {
                 int next = read();
@@ -209,7 +209,7 @@ public class TLConsole extends JPanel {
                 b[off + count] = (byte)next;
                 ++count;
             } while (count < len && available() > 0 && b[count-1] != '\n');
-            
+
             return count;
         }
 
@@ -231,9 +231,9 @@ public class TLConsole extends JPanel {
             } catch (InterruptedException e) {
                 return -1;
             }
-        } 
+        }
     };
-    
+
     private final OutputStream textAreaOut = new OutputStream() {
         @Override
         public void write(byte[] b) throws IOException {
@@ -258,13 +258,13 @@ public class TLConsole extends JPanel {
 
     private static final SimpleAttributeSet INPUT_TEXT_ATTR;
     private static final SimpleAttributeSet OUTPUT_TEXT_ATTR;
-    
+
     static {
-        INPUT_TEXT_ATTR = new SimpleAttributeSet();  
+        INPUT_TEXT_ATTR = new SimpleAttributeSet();
         StyleConstants.setForeground(INPUT_TEXT_ATTR, Color.GREEN.darker());
-        
+
         OUTPUT_TEXT_ATTR = new SimpleAttributeSet();
         StyleConstants.setForeground(OUTPUT_TEXT_ATTR, Color.BLUE);
     }
-    
+
 }

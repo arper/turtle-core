@@ -2,7 +2,7 @@ package org.arper.test;
 
 import java.awt.Color;
 
-import org.arper.turtle.Turtle;
+import org.arper.__old__.turtle.Turtle;
 
 
 public class ConsoleTurtle extends Turtle {

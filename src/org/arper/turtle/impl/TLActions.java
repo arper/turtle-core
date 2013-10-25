@@ -2,136 +2,259 @@ package org.arper.turtle.impl;
 
 
 public class TLActions {
-    
-    public static TLAction moveTo(double x, double y) {
+
+    public static TLAction moveTo(float x, float y) {
         return new MoveToAction(x, y);
     }
-    
-    public static TLAction turn(double turnAmount) { 
+
+    public static TLAction turn(float turnAmount) {
         return new TurnAction(turnAmount);
     }
-    
-    public static TLAction pause(double pauseAmount, boolean showStatus) {
+
+    public static TLAction lookAt(float x, float y) {
+        return new LookAtAction(x, y);
+    }
+
+    public static TLAction head(float heading) {
+        return new HeadingAction(heading);
+    }
+
+    public static TLAction forward(float amount) {
+        return new ForwardAction(amount);
+    }
+
+    public static TLAction pause(float pauseAmount, boolean showStatus) {
         return new PauseAction(pauseAmount, showStatus);
     }
-    
+
     public static TLAction empty() {
         return EMPTY_ACTION;
-        
     }
-        
+
+    private static float doHeading(float heading, TurtleState t, float seconds) {
+        float diff = turnAmount(t.heading, heading);
+        if (Math.abs(diff) <= seconds * t.turningSpeed) {
+            t.heading = heading;
+            return seconds - Math.abs(diff) / t.turningSpeed;
+        } else {
+            t.heading += Math.signum(diff) * t.turningSpeed * seconds;
+            return 0;
+        }
+    }
+
+    private static float doLookAt(float x, float y, TurtleState t, float seconds) {
+        TLVector v = new TLVector(x, y).subtract(t.location);
+        float turnAmount = turnAmount(t.heading, v.angle());
+        if (Math.abs(turnAmount) <= seconds * t.turningSpeed) {
+            t.heading += turnAmount;
+            return seconds - Math.abs(turnAmount) / t.turningSpeed;
+        } else {
+            t.heading += Math.signum(turnAmount) * t.turningSpeed * seconds;
+            return 0;
+        }
+    }
+
+    private static float doForward(float amount, TurtleState t, float seconds) {
+        if (amount <= t.movementSpeed * seconds) {
+            TLVector end = new TLVector(t.location).add(TLVector.unitVectorInDirection(t.heading).scale(amount));
+            t.location.setLocation(end.x, end.y);
+            return seconds - amount / t.movementSpeed;
+        } else {
+            TLVector end = new TLVector(t.location).add(TLVector.unitVectorInDirection(t.heading).scale(seconds * t.movementSpeed));
+            t.location.setLocation(end.x, end.y);
+            return 0;
+        }
+    }
+
+    private static float turnAmount(float heading, float target) {
+        float diff = (target - heading) % (TLVector.TWO_PI_F);
+        if (diff < -TLVector.PI_F) {
+            diff += TLVector.TWO_PI_F;
+        }
+        else if (diff > TLVector.PI_F) {
+            diff -= TLVector.TWO_PI_F;
+        }
+        return diff;
+    }
+
     private static class MoveToAction implements TLAction {
-        private double x, y;
-        public MoveToAction(double x, double y) {
+        public MoveToAction(float x, float y) {
             this.x = x;
             this.y = y;
         }
 
-        @Override
-        public double perform(TLMutableState t, double seconds) {
-            TLVector v = new TLVector(x - t.getX(), y - t.getY());
-            double len = v.length();
-            double requiredTime = len / t.getSpeed();
+        private final float x;
+        private final float y;
 
-            if (requiredTime < seconds) {
-                /* We can get there in less time than we have available */
-                t.setLocation(x, y);
-                return seconds - requiredTime;
-            } else {
-                /* We can only get part-way there */
-                v = v.normalize();
-                TLVector nextPos = new TLVector(t.getX(), t.getY()).add(v.scale(t.getSpeed() * seconds));
-                t.setLocation(nextPos.getX(), nextPos.getY());
-                return 0;
+        @Override
+        public float perform(TurtleState t, float seconds) {
+            seconds = doLookAt(x, y, t, seconds);
+            if (seconds > 0) {
+                seconds = doForward(new TLVector(x, y).subtract(t.location).length(), t, seconds);
             }
+            return seconds;
         }
 
         @Override
-        public void execute(TLMutableState t) {
-            t.setLocation(x, y);
+        public float getCompletionTime(TurtleState t) {
+            TLVector v = new TLVector(x, y).subtract(t.location);
+            return Math.abs(turnAmount(t.heading, v.angle())) / t.turningSpeed
+                    + v.length() / t.movementSpeed;
         }
     }
 
-    private static class TurnAction implements TLAction {
-        private double turnAmount;
-        public TurnAction(double turnAmount) {
-            this.turnAmount = turnAmount;
+    private static class ForwardAction implements TLAction {
+
+        public ForwardAction(float amount) {
+            this.amount = amount;
         }
 
-        @Override
-        public double perform(TLMutableState t, double seconds) {
-            double required = Math.abs(turnAmount) / t.getTurnRate();
+        private float amount;
 
-            if (required < seconds) {
-                t.setHeading(t.getHeading() + turnAmount);
-                turnAmount = 0;
-                return seconds - required;
+        @Override
+        public float perform(TurtleState t, float seconds) {
+            if (amount <= t.movementSpeed * seconds) {
+                TLVector end = new TLVector(t.location).add(TLVector.unitVectorInDirection(t.heading).scale(amount));
+                t.location.setLocation(end.x, end.y);
+                amount = 0;
+                return seconds - amount / t.movementSpeed;
             } else {
-                double update = seconds * t.getTurnRate() * (turnAmount > 0? 1 : -1);
-                t.setHeading(t.getHeading() + update);
-                turnAmount -= update;
+                TLVector end = new TLVector(t.location).add(TLVector.unitVectorInDirection(t.heading).scale(seconds * t.movementSpeed));
+                t.location.setLocation(end.x, end.y);
+                amount -= seconds * t.movementSpeed;
                 return 0;
             }
         }
 
         @Override
-        public void execute(TLMutableState t) {
-            t.setHeading(t.getHeading() + turnAmount);
+        public float getCompletionTime(TurtleState t) {
+            return amount / t.movementSpeed;
+        }
+
+    }
+
+    private static class LookAtAction implements TLAction {
+
+        public LookAtAction(float x, float y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        private final float x;
+        private final float y;
+
+        @Override
+        public float perform(TurtleState t, float seconds) {
+            return doLookAt(x, y, t, seconds);
+        }
+
+        @Override
+        public float getCompletionTime(TurtleState t) {
+            TLVector v = new TLVector(x, y).subtract(t.location);
+            return Math.abs(turnAmount(t.heading, v.angle())) / t.turningSpeed;
+        }
+    }
+
+    private static class HeadingAction implements TLAction {
+
+        public HeadingAction(float heading) {
+            this.heading = heading;
+        }
+
+        private final float heading;
+
+        @Override
+        public float perform(TurtleState t, float seconds) {
+            return doHeading(heading, t, seconds);
+        }
+
+        @Override
+        public float getCompletionTime(TurtleState t) {
+            return Math.abs(turnAmount(t.heading, heading)) / t.turningSpeed;
+        }
+
+    }
+
+    private static class TurnAction implements TLAction {
+        public TurnAction(float turnAmount) {
+            this.turnAmount = turnAmount;
+        }
+
+        private float turnAmount;
+
+        @Override
+        public float perform(TurtleState t, float seconds) {
+            if (Math.abs(turnAmount) <= seconds * t.turningSpeed) {
+                t.heading += turnAmount;
+                seconds -= Math.abs(turnAmount) / t.turningSpeed;
+                turnAmount = 0;
+                return seconds;
+            } else {
+                float turn = Math.signum(turnAmount) * seconds;
+                turnAmount -= turn;
+                t.heading += turn;
+                return 0;
+            }
+        }
+
+        @Override
+        public float getCompletionTime(TurtleState t) {
+            return Math.abs(turnAmount) / t.turningSpeed;
         }
     }
 
     private static class PauseAction implements TLAction {
-        private double pauseAmount;
-        private boolean showStatus;
-        private String initialStatus;
-        private boolean firstRun = true;
-        
-        public PauseAction(double pauseAmount, boolean showStatus) {
+
+        public PauseAction(float pauseAmount, boolean showStatus) {
             this.pauseAmount = pauseAmount;
             this.showStatus = showStatus;
         }
 
+        private final boolean showStatus;
+        private float pauseAmount;
+        private String initialStatus;
+        private boolean firstRun = true;
+
         @Override
-        public double perform(TLMutableState t, double seconds) {
+        public float perform(TurtleState t, float seconds) {
             if (firstRun) {
                 firstRun = false;
-                initialStatus = t.getStatus();
+                initialStatus = t.status;
             }
-            
+
             if (pauseAmount < seconds) {
-                double retval = seconds - pauseAmount;
+                float retval = seconds - pauseAmount;
                 pauseAmount = 0;
                 if (showStatus) {
-                    t.setStatus(initialStatus);
+                    t.status = initialStatus;
                 }
                 return retval;
             } else {
                 pauseAmount -= seconds;
                 if (showStatus) {
-                    t.setStatus(String.format("%.1f", pauseAmount));
+                    t.status = String.format("%.1f", pauseAmount);
                 }
                 return 0;
             }
         }
 
         @Override
-        public void execute(TLMutableState t) {
-            pauseAmount = 0;
+        public float getCompletionTime(TurtleState t) {
+            return pauseAmount;
         }
     }
 
     private static final TLAction EMPTY_ACTION = new TLAction() {
 
         @Override
-        public double perform(TLMutableState t, double seconds) {
-            /* do nothing, pass back full seconds amount */
+        public float perform(TurtleState t, float seconds) {
             return seconds;
         }
 
         @Override
-        public void execute(TLMutableState t) {
-            /* do nothing */
+        public float getCompletionTime(TurtleState t) {
+            return 0;
         }
-        
+
     };
 }

@@ -1,4 +1,4 @@
-package org.arper.turtle;
+package org.arper.turtle.impl;
 
 import java.awt.image.BufferedImage;
 import java.net.URL;
@@ -6,6 +6,7 @@ import java.net.URL;
 import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
 
+import org.arper.turtle.Turtle;
 import org.imgscalr.Scalr;
 import org.imgscalr.Scalr.Method;
 
@@ -104,7 +105,7 @@ public class DefaultTurtleAnimation implements TLAnimation {
 			pos = getFootAnimationCyclePosition(sec);
 			sign = -1;
 			break;
-		case RFLIPPER_IMAGE: 
+		case RFLIPPER_IMAGE:
 			pos = getFlipperAnimationCyclePosition(sec);
 			sign = -1;
 			break;

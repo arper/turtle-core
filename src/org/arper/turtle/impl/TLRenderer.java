@@ -1,6 +1,7 @@
-package org.arper.turtle;
+package org.arper.turtle.impl;
 
 import java.awt.AlphaComposite;
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Composite;
 import java.awt.Graphics2D;
@@ -16,9 +17,9 @@ import java.util.Map.Entry;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.arper.turtle.Turtle.PathType;
-import org.arper.turtle.impl.TLUtil;
-import org.arper.turtle.impl.TLVector;
+import org.arper.turtle.PathType;
+import org.arper.turtle.Turtle;
+import org.arper.turtle.ui.TLCanvas;
 import org.imgscalr.Scalr;
 import org.imgscalr.Scalr.Method;
 
@@ -40,12 +41,29 @@ public class TLRenderer {
 
     protected final Turtle owner;
     private final Lock statusBubbleLock;
-    
+
     private float transparency;
     private TLStatusBubble statusBubble;
     private TLAnimation turtleAnimation;
-    private Point2D lastTrackedLocation;
-	
+    private Point2D.Float lastTrackedLocation;
+    private Stroke stroke;
+
+    protected TurtleState state() {
+        return TLSingletonContext.get().getSimulator().getTurtleState(owner);
+    }
+
+    protected TLCanvas canvas() {
+        return TLSingletonContext.get().getWindow().getCanvas();
+    }
+
+    private void refreshStroke() {
+        if (owner.getPathType() == PathType.Sharp) {
+            stroke = new BasicStroke(state().thickness, BasicStroke.CAP_BUTT,  BasicStroke.JOIN_BEVEL);
+        } else {
+            stroke = new BasicStroke(state().thickness, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+        }
+    }
+
 	private int getMaxDimension() {
 		return Math.max(turtleAnimation.getBoundingWidth(), turtleAnimation.getBoundingHeight());
 	}
@@ -59,7 +77,7 @@ public class TLRenderer {
 			markDirty();
 		}
 	}
-	
+
 	public TLAnimation getAnimation() {
 		return turtleAnimation;
 	}
@@ -67,11 +85,11 @@ public class TLRenderer {
 	public void updateColor() {
 		updateComposite();
 	}
-	
+
 	private void updateComposite() {
-        turtleComposite = new TLUtil.MultiplyColorComposite(owner.getColor(), 0.4f);
+        turtleComposite = new TLDisplayUtilities.MultiplyColorComposite(owner.getColor(), 0.4f);
 	}
-	
+
 	private static final AlphaComposite bubbleComposite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.8f);
 	private Composite turtleComposite;
 	public double getTransparency() {
@@ -82,7 +100,7 @@ public class TLRenderer {
 		this.transparency = (float) alpha;
 		updateComposite();
 	}
-	
+
 	public void updateStatusBubble() {
 		try {
 			statusBubbleLock.lock();
@@ -97,8 +115,9 @@ public class TLRenderer {
 			statusBubbleLock.unlock();
 		}
 	}
-	
+
 	public void screenRender(Graphics2D g) {
+	    refreshStroke();
 		if (owner.isPenDown()) {
 			double cSize = turtleAnimation.getCursorSize(owner);
 			g.setColor(owner.getColor());
@@ -106,9 +125,9 @@ public class TLRenderer {
 			drawPathSegment(g);
 			syncCanvasPath(false);
 		}
-		
+
 		AffineTransform at = g.getTransform();
-		
+
 		try {
 			statusBubbleLock.lock();
 			if (statusBubble != null) {
@@ -124,7 +143,7 @@ public class TLRenderer {
 		} finally {
 			statusBubbleLock.unlock();
 		}
-		
+
 		if (transparency > 0) {
 		    double size = turtleAnimation.getSize(owner);
 			double scale = size / getMaxDimension();
@@ -135,7 +154,7 @@ public class TLRenderer {
 			double elapsedSeconds = 0;
 			double elapsedDistance = 0;
 			double elapsed = elapsedDistance + elapsedSeconds / 2;
-			
+
 			AffineTransform at2 = g.getTransform();
 			BufferedImage[] images = turtleAnimation.getImages();
 			for (int i = 0; i < images.length; i++) {
@@ -144,73 +163,78 @@ public class TLRenderer {
 
                 double tX = turtleAnimation.getBoundingWidth() * turtleAnimation.getCenterX(i);
                 double tY = turtleAnimation.getBoundingHeight() * turtleAnimation.getCenterY(i);
-                double rotateAmount = owner.getMutableState().getHeading() + turtleAnimation.getPieceRotation(i, elapsed);
+                double rotateAmount = state().heading + turtleAnimation.getPieceRotation(i, elapsed);
                 g.rotate(rotateAmount);
 
                 BufferedImage pretty = getTurtleImage((int) Math.ceil(size), images[i]);
 			    if (pretty != null) {
-			        g.translate(-turtleAnimation.getCenterX(i) * pretty.getWidth(), 
+			        g.translate(-turtleAnimation.getCenterX(i) * pretty.getWidth(),
 			                -turtleAnimation.getCenterY(i) * pretty.getHeight());
 			        drawImage(pretty, g);
-			    } 
+			    }
 			    else {
 		            g.scale(scale, scale);
                     g.translate(-tX, -tY);
                     drawImage(pretty, g);
 			    }
-			    
+
 			    g.setTransform(at2);
 			}
-	
+
 		}
 		g.setTransform(at);
 	}
-    
+
     private void drawPathSegment(Graphics2D g) {
-        Point2D location = owner.getLocation();
-        TLVector dir = new TLVector(location).subtract(new TLVector(lastTrackedLocation));
+        if (lastTrackedLocation == null) {
+            lastTrackedLocation = state().location;
+            return;
+        }
+
+        TLVector dir = new TLVector(state().location).subtract(lastTrackedLocation.x, lastTrackedLocation.y);
         if (dir.lengthSquared() > 0) {
             Stroke s = g.getStroke();
-            g.setStroke(owner.getStroke());
-            
+            g.setStroke(stroke);
+
             if (owner.getPathType() == PathType.Rounded) {
-                g.draw(new Line2D.Double(lastTrackedLocation, location));
-            } else { 
+                g.draw(new Line2D.Double(lastTrackedLocation, state().location));
+            } else {
                 double len_sq = dir.lengthSquared();
                 double extension = -Math.expm1(-len_sq / 12) / 2; // extension = (1 - e^{len_sq / 4}) / 2
                 dir = dir.normalize();
-                Point2D augmentedLoc = new TLVector(location).add(dir.scale(extension)).asPoint2D();
-                Point2D loweredLast = new TLVector(lastTrackedLocation).add(dir.scale(-extension)).asPoint2D();
+                Point2D augmentedLoc = new TLVector(state().location).add(dir.scale((float) extension)).asPoint2D();
+                Point2D loweredLast = new TLVector(lastTrackedLocation).add(dir.scale(-(float)extension)).asPoint2D();
                 g.draw(new Line2D.Double(loweredLast, augmentedLoc));
             }
             g.setStroke(s);
         }
     }
-    
+
     public void commitPath() {
         syncCanvasPath(true);
     }
-    
+
     private void syncCanvasPath(boolean isFinal) {
-        Point2D newLocation = owner.getLocation();
+        Point2D.Float newLocation = state().location;
         if (newLocation.equals(lastTrackedLocation)) {
             return;
         } else if (lastTrackedLocation == null) {
             lastTrackedLocation = newLocation;
             return;
         }
-        
+
         if (isFinal || newLocation.distanceSq(lastTrackedLocation) > MAX_SEGMENT_PAINT_LENGTH_SQ) {
             if (owner.isPenDown()) {
-                drawPathSegment(owner.getCanvas().getCanvasGraphics());
-                owner.getCanvas().markDirty(lastTrackedLocation, newLocation);
+                drawPathSegment(canvas().getCanvasGraphics());
+                canvas().markDirty(lastTrackedLocation, newLocation);
             }
             lastTrackedLocation.setLocation(newLocation);
         }
     }
-	
+
 	private void drawImage(BufferedImage i, Graphics2D g) {
-        if (TLUtil.isMacComputer) {
+	    updateComposite();
+        if (TLDisplayUtilities.isMacOS) {
             g.drawImage(i, 0, 0, null);
         } else {
             Composite c = g.getComposite();
@@ -219,22 +243,19 @@ public class TLRenderer {
             g.setComposite(c);
 	    }
 	}
-	
+
 	public void markDirty() {
-		if (owner.getCanvas() == null) {
-			return;
-		}
         Point2D spriteOrigin = owner.getLocation();
-		
+
 		if (statusBubble != null) {
 			Rectangle r = statusBubble.getShape().getBounds();
 			r.translate((int)Math.round(spriteOrigin.getX()), (int)Math.round(spriteOrigin.getY()));
-			owner.getCanvas().markDirty(r);
+			canvas().markDirty(r);
 		}
 		double maxSize = Math.max(turtleAnimation.getSize(owner) / Math.sqrt(2), turtleAnimation.getCursorSize(owner) / 2);
-		owner.getCanvas().markDirty(spriteOrigin, (int)Math.ceil(maxSize));
+		canvas().markDirty(spriteOrigin, (int)Math.ceil(maxSize));
 	}
-	
+
 	private static final LoadingCache<Map.Entry<Integer, BufferedImage>, BufferedImage> imageCache;
 	static {
 	    imageCache = CacheBuilder.newBuilder().concurrencyLevel(4).build(

@@ -1,4 +1,4 @@
-package org.arper.turtle;
+package org.arper.turtle.impl;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Polygon;
@@ -10,7 +10,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
 
-import org.arper.turtle.impl.TLUtil;
+import org.arper.turtle.TLUtils;
 
 public class TLStatusBubble {
 
@@ -26,13 +26,13 @@ public class TLStatusBubble {
 	public TLStatusBubble(double x, double y, double stemLength, double bubbleWidth, double bubbleHeight) {
 		shape = createBubble(x, y, stemLength, bubbleWidth, bubbleHeight);
 	}
-	
+
 	public TLStatusBubble(double x, double y, double stemLength, String text, double pad) {
-		this(x, y, stemLength, text, pad, new Font(TLUtil.getDefaultFontFamily(), Font.PLAIN, 11));
+		this(x, y, stemLength, text, pad, new Font(TLUtils.getDefaultFontFamily(), Font.PLAIN, 11));
 	}
 
 	public TLStatusBubble(double x, double y, double stemLength, String text, double pad, Font f) {
-		textBounds = TLUtil.getMultilineTextBounds(text, f, fontContext);
+		textBounds = TLDisplayUtilities.getMultilineTextBounds(text, f, fontContext);
 		lineMetrics = f.getLineMetrics(text, fontContext);
 		this.font = f;
 		this.text = text;
@@ -89,7 +89,7 @@ public class TLStatusBubble {
 		if (text != null) {
 			Font f = g.getFont();
 			g.setFont(font);
-			TLUtil.drawMultilineString(g, text, textX, textY, TLUtil.CENTER);
+			TLDisplayUtilities.drawMultilineString(g, text, textX, textY, TLDisplayUtilities.CENTER);
 			g.setFont(f);
 		}
 	}

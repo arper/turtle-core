@@ -1,6 +1,8 @@
-package org.arper.turtle;
+package org.arper.turtle.impl;
 
 import java.awt.image.BufferedImage;
+
+import org.arper.turtle.Turtle;
 
 public interface TLAnimation {
     public abstract BufferedImage[] getImages();
@@ -15,8 +17,8 @@ public interface TLAnimation {
 
     public abstract double getSize(Turtle t);
     public abstract double getCursorSize(Turtle t);
-    
-    
+
+
     public static final TLAnimation Empty = new TLAnimation() {
         @Override
         public BufferedImage[] getImages() {

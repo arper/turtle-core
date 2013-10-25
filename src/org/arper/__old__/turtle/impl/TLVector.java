@@ -1,4 +1,4 @@
-package org.arper.turtle.impl;
+package org.arper.__old__.turtle.impl;
 
 import java.awt.geom.Point2D;
 
@@ -7,15 +7,9 @@ import org.arper.turtle.TLSimulator;
 public class TLVector {
 
     public static final float PI_F = (float) Math.PI;
-    public static final float TWO_PI_F = (float) (2 * Math.PI);
 
     public static TLVector unitVectorInDirection(double radians) {
         return new TLVector((float) Math.cos(radians), (float) Math.sin(radians));
-    }
-
-    public TLVector(Point2D.Float p) {
-        this.x = p.x;
-        this.y = p.y;
     }
 
     public TLVector(float x, float y) {
@@ -23,8 +17,21 @@ public class TLVector {
         this.y = y;
     }
 
-    public final float x;
-    public final float y;
+    public TLVector(Point2D.Float loc) {
+        this.x = loc.x;
+        this.y = loc.y;
+    }
+
+    private final float x;
+    private final float y;
+
+    public float getX() {
+        return x;
+    }
+
+    public float getY() {
+        return y;
+    }
 
     public float lengthSquared() {
         return x * x + y * y;
@@ -55,10 +62,6 @@ public class TLVector {
         return new TLVector(this.x + x, this.y + y);
     }
 
-    public TLVector add(Point2D.Float p) {
-        return new TLVector(this.x + p.x, this.y + p.y);
-    }
-
     public TLVector subtract(TLVector b) {
         return new TLVector(x - b.x, y - b.y);
     }
@@ -67,11 +70,7 @@ public class TLVector {
         return new TLVector(this.x - x, this.y - y);
     }
 
-    public TLVector subtract(Point2D.Float p) {
-        return new TLVector(this.x - p.x, this.y - p.y);
-    }
-
-    public Point2D.Float asPoint2D() {
+    public Point2D asPoint2D() {
         return new Point2D.Float(x, y);
     }
 

@@ -1,4 +1,4 @@
-package org.asper.turtle.ui;
+package org.arper.turtle.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -41,11 +41,9 @@ import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.arper.turtle.TLAnimatorSettings;
-import org.arper.turtle.TLApplication;
-import org.arper.turtle.TLCanvas;
+import org.arper.turtle.TLSimulationSettings;
 import org.arper.turtle.Turtle;
-
+import org.arper.turtle.impl.TLSingletonContext;
 
 
 //import com.alee.laf.WebLookAndFeel;
@@ -64,9 +62,9 @@ public class TLWindow extends JFrame {
     private JButton updateButton;
 	private JSlider speedSlider;
 	public final TLConsole console;
-	
+
 	private JFrame consoleWindow;
-	
+
 	static {
 	    try {
 //	        com.jtattoo.plaf.aero.AeroLookAndFeel.setTheme("Default-Large-Font", "atl", "Turtle");
@@ -76,17 +74,17 @@ public class TLWindow extends JFrame {
 
 //            com.jtattoo.plaf.mint.MintLookAndFeel.setTheme("Red", "atl", "Turtle");
 //            UIManager.setLookAndFeel("com.jtattoo.plaf.mint.MintLookAndFeel");
-	        
+
 //	        SubstanceLookAndFeel.setSkin(new MistAquaSkin());
 //	        UIManager.setLookAndFeel(new SubstanceMistSilverLookAndFeel());
 //	        UIManager.put(SubstanceLookAndFeel.COLORIZATION_FACTOR, 1.0);
-	        
+
 //	        UIManager.setLookAndFeel(new WebLookAndFeel());
         } catch (Exception e) {
             e.printStackTrace();
         }
 	}
-	
+
 	public TLWindow(int canvasWidth, int canvasHeight) {
 	    console = new TLConsole();
 	    layoutToolbar();
@@ -97,23 +95,23 @@ public class TLWindow extends JFrame {
 	    } catch (Exception e) {}
 	    controlPanel.setMinimumSize(controlPanel.getPreferredSize());
 		pack();
-		
+
 		canvas.addKeyListener(inputListener);
 		getContentPane().addKeyListener(inputListener);
 		this.addKeyListener(inputListener);
 		controlPanel.addKeyListener(inputListener);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
-	
+
 	public TLWindow() {
 		this(Toolkit.getDefaultToolkit().getScreenSize().width / 4,
 				Toolkit.getDefaultToolkit().getScreenSize().height / 4);
 	}
-	
+
 	public TLCanvas getCanvas() {
 		return canvas;
 	}
-	
+
 	private void showConsoleAction() {
 	    if (consoleWindow == null) {
 	        consoleWindow = new JFrame("Console - " + getTitle());
@@ -128,16 +126,16 @@ public class TLWindow extends JFrame {
 	    }
         consoleWindow.toFront();
 	}
-	
+
 	private void refreshPlayPauseDisplay() {
-        TLAnimatorSettings settings = canvas.getAnimator().getSettings();
+        TLSimulationSettings settings = TLSingletonContext.get().getSimulator().getSettings();
         if (!settings.isPaused()) {
             pauseOverlay.setVisible(false);
-            
+
             if (pauseIcon != null) {
                 playButton.setText("");
                 playButton.setIcon(pauseIcon);
-                
+
 //                ButtonUI bui = playButton.getUI();
 //                if (bui instanceof WebButtonUI) {
 //                    ((WebButtonUI)bui).setBottomBgColor(new Color(236, 226, 210));
@@ -150,7 +148,7 @@ public class TLWindow extends JFrame {
             }
         } else {
             pauseOverlay.setVisible(true);
-            
+
             if (playIcon != null) {
                 playButton.setIcon(playIcon);
                 playButton.setText("");
@@ -165,11 +163,11 @@ public class TLWindow extends JFrame {
                 playButton.setFont(playButton.getFont().deriveFont(37.0f));
             }
         }
-	    
+
 	}
-	
+
 	private void playAction() {
-	    TLAnimatorSettings settings = canvas.getAnimator().getSettings();
+	    TLSimulationSettings settings = TLSingletonContext.get().getSimulator().getSettings();
 	    synchronized (settings) {
 	        if (settings.isPaused()) {
 	            settings.unpause();
@@ -179,27 +177,27 @@ public class TLWindow extends JFrame {
 	        refreshPlayPauseDisplay();
 	    }
 	}
-	
+
 	private void speedAction() {
-        TLAnimatorSettings settings = canvas.getAnimator().getSettings();
+        TLSimulationSettings settings = TLSingletonContext.get().getSimulator().getSettings();
         double val = speedSlider.getModel().getValue() * 1.0 / speedSlider.getModel().getMaximum();
         synchronized (settings) {
             settings.setAnimationSpeed(Math.pow(36, val) / 6);
         }
 	}
-	
+
 	private void helpAction() {
 	    final String DOC_URL = "http://stanford.edu/~alexryan/cgi-bin/turtledoc/";
         try {
             Desktop.getDesktop().browse(new URL(DOC_URL).toURI());
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(TLWindow.this, 
-                    "Unable to open documentation:\n" + e.getMessage(), 
-                    "Help Error", 
+            JOptionPane.showMessageDialog(TLWindow.this,
+                    "Unable to open documentation:\n" + e.getMessage(),
+                    "Help Error",
                     JOptionPane.ERROR_MESSAGE);
         }
 	}
-	
+
 	private void updateAction() {
 	    try {
 	        CodeSource codeSource = Turtle.class.getProtectionDomain().getCodeSource();
@@ -211,7 +209,7 @@ public class TLWindow extends JFrame {
 	                URL libFile = new URL("http://stanford.edu/~alexryan/cgi-bin/" + libName);
 	                URLConnection connection = libFile.openConnection();
 	                if (connection.getLastModified() <= jarFile.lastModified()) {
-	                    JOptionPane.showMessageDialog(TLWindow.this, 
+	                    JOptionPane.showMessageDialog(TLWindow.this,
 	                            "All libraries up-to-date!", "Update Successful",
 	                            JOptionPane.INFORMATION_MESSAGE);
 	                    return;
@@ -222,7 +220,7 @@ public class TLWindow extends JFrame {
 	                jarFile.setLastModified(connection.getLastModified());
 	                JOptionPane.showMessageDialog(TLWindow.this,
 	                        "Successfully updated " + libName + " to latest version.\n" +
-	                		"\nRe-run the program to load the new library code.", 
+	                		"\nRe-run the program to load the new library code.",
 	                		"Update Complete", JOptionPane.INFORMATION_MESSAGE);
 	            } catch (Exception e) {
 	                e.printStackTrace();
@@ -247,16 +245,16 @@ public class TLWindow extends JFrame {
 	        e.printStackTrace();
 	    }
 	}
-	
+
     private void layoutCanvas(int width, int height) {
 	    setLayout(new BorderLayout());
-	    
+
         canvas = new TLCanvas(width, height, this);
         canvas.setBackground(Color.WHITE);
-        
-        
+
+
         final JScrollPane canvasScrollPane = new JScrollPane(canvas);
-        
+
         JLayeredPane centerWrapper = new JLayeredPane();
         centerWrapper.addComponentListener(new ComponentAdapter() {
             @Override
@@ -270,13 +268,13 @@ public class TLWindow extends JFrame {
         centerWrapper.add(canvasScrollPane, 0, 0);
         centerWrapper.add(pauseOverlay, 1, 1);
         centerWrapper.moveToFront(pauseOverlay);
-        
+
         add(centerWrapper, BorderLayout.CENTER);
         add(controlPanel, BorderLayout.WEST);
         add(new JComponent(){}, BorderLayout.NORTH);
         add(new JComponent(){}, BorderLayout.SOUTH);
 	}
-    
+
     private void layoutToolbar() {
         try {
             ImageIcon icon = new ImageIcon(ImageIO.read(ClassLoader.getSystemResource("icons/pause2.png")));
@@ -296,7 +294,7 @@ public class TLWindow extends JFrame {
             instrLabel.setForeground(new Color(0f, 0f, 0f, .03f));
             instrLabel.setOpaque(false);
             instrLabel.setBackground(new Color(0, 0, 0, 0));
-            
+
             pauseOverlay = Box.createVerticalBox();
             pauseOverlay.add(Box.createVerticalGlue());
             pauseOverlay.add(iconLabel);
@@ -325,7 +323,7 @@ public class TLWindow extends JFrame {
         try {
             pauseIcon = new ImageIcon(ImageIO.read(ClassLoader.getSystemResource("icons/pause.png")));
         } catch (Exception e) {}
-        
+
         playButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
@@ -334,7 +332,7 @@ public class TLWindow extends JFrame {
         });
         controlPanel.add(playButton);
         controlPanel.addSeparator();
-        
+
         speedSlider = new JSlider(JSlider.VERTICAL, 0, 12000, 6000);
         speedSlider.setMajorTickSpacing(3000);
         speedSlider.setAlignmentX(JComponent.CENTER_ALIGNMENT);
@@ -355,7 +353,7 @@ public class TLWindow extends JFrame {
         controlPanel.add(speedSlider);
         controlPanel.add(makeLabel("Slow"));
         controlPanel.addSeparator();
-        
+
         showConsoleButton = createToolbarButton("icons/console.png", "Console",
                 "Show Console (C)");
         showConsoleButton.addActionListener(new ActionListener() {
@@ -365,13 +363,14 @@ public class TLWindow extends JFrame {
             }
         });
         controlPanel.add(showConsoleButton);
-        
+
         restartButton = createToolbarButton("icons/restart.png", "Restart",
                 "Restart Application (R) [requires debug mode]");
         restartButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                TLApplication.restart(TLWindow.this);
+                /* TODO: restart */
+//                TLApplication.restart(TLWindow.this);
             }
         });
         controlPanel.add(restartButton);
@@ -396,7 +395,7 @@ public class TLWindow extends JFrame {
         controlPanel.add(updateButton, "END");
         controlPanel.add(helpButton, "END");
     }
-    
+
     private JButton createToolbarButton(String icon, String backupText, String tooltip) {
         JButton b = new JButton();
         try {
@@ -412,7 +411,7 @@ public class TLWindow extends JFrame {
         b.setToolTipText(tooltip);
         return b;
     }
-	
+
 	private JComponent makeLabel(String text) {
 	    JLabel l = new JLabel(text);
         l.setFont(new Font("Helvetica", Font.PLAIN, 14));
@@ -423,8 +422,8 @@ public class TLWindow extends JFrame {
 //	    l.setForeground(new Color(60, 95, 142));
 	    return l;
 	}
-	
-	private final KeyListener inputListener = new KeyAdapter() { 
+
+	private final KeyListener inputListener = new KeyAdapter() {
 	    @Override
         public void keyPressed(KeyEvent e) {
 	        switch (e.getKeyCode()) {
@@ -455,5 +454,5 @@ public class TLWindow extends JFrame {
 	        }
 	    }
 	};
-	
+
 }

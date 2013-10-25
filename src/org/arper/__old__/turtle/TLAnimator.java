@@ -1,4 +1,4 @@
-package org.arper.turtle;
+package org.arper.__old__.turtle;
 
 import java.util.List;
 import java.util.Map;
@@ -8,6 +8,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.arper.turtle.TLSimulationSettings;
 import org.arper.turtle.impl.TLAction;
 import org.arper.turtle.impl.TLActions;
 
@@ -24,7 +25,7 @@ public class TLAnimator {
 	private Map<Turtle, TLTurtleAnimationHelper> turtleHelpers;
 	private AnimationThread animationThread;
 	private boolean running;
-	private final TLAnimatorSettings settings;
+	private final TLSimulationSettings settings;
 	
 	public TLAnimator() {
 		turtles = Lists.newArrayList();
@@ -32,7 +33,7 @@ public class TLAnimator {
 		running = false;
 		
 		animationThread = new AnimationThread();
-		settings = new TLAnimatorSettings();
+		settings = new TLSimulationSettings();
 	}
 	
 	public synchronized void reset() {
@@ -52,7 +53,7 @@ public class TLAnimator {
         }
 	}
 	
-	public TLAnimatorSettings getSettings() {
+	public TLSimulationSettings getSettings() {
 	    return settings;
 	}
     
