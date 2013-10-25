@@ -17,13 +17,13 @@ import java.util.concurrent.ExecutionException;
 
 import javax.swing.JPanel;
 
-import org.arper.__old__.turtle.impl.TurtleLogging;
 import org.arper.turtle.TLApplicationConfig;
 import org.arper.turtle.TLUtils;
 import org.arper.turtle.Turtle;
 import org.arper.turtle.impl.TLDisplayUtilities;
 import org.arper.turtle.impl.TLRenderer;
 import org.arper.turtle.impl.TLSingletonContext;
+import org.arper.turtle.impl.TurtleLogging;
 
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
