@@ -10,6 +10,7 @@ public interface TLApplicationConfig {
 
     int getSimulationCores();
     long getSimulationStepMicros();
+    long getSimulationMaxStutterMicros();
     long getSimulationMaxBusyWaitMicros();
 
     TLApplicationConfig DEFAULT = new TLApplicationConfig() {
@@ -39,6 +40,11 @@ public interface TLApplicationConfig {
             return 1000L;
         }
 
+        @Override
+        public long getSimulationMaxStutterMicros() {
+            return 5000L;
+        }
+        
         @Override
         public long getSimulationMaxBusyWaitMicros() {
             return 50;

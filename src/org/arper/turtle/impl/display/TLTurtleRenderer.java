@@ -1,4 +1,4 @@
-package org.arper.turtle.impl;
+package org.arper.turtle.impl.display;
 
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
@@ -15,6 +15,11 @@ import java.util.List;
 
 import org.arper.turtle.PathType;
 import org.arper.turtle.Turtle;
+import org.arper.turtle.impl.DefaultTurtleAnimation;
+import org.arper.turtle.impl.TLAwtUtilities;
+import org.arper.turtle.impl.TLRenderer;
+import org.arper.turtle.impl.TLSingletonContext;
+import org.arper.turtle.impl.TurtleState;
 import org.arper.turtle.ui.TLCanvas;
 
 import com.google.common.base.Objects;
@@ -84,7 +89,8 @@ public class TLTurtleRenderer implements TLRenderer {
         }
 
         /* segment committing */
-        if (!sampledPathPoints.isEmpty() && (
+        if (renderedState != null &&
+                !sampledPathPoints.isEmpty() && (
                 strokeChange ||
                 newState.color != renderedState.color ||
                 newState.isPenDown != renderedState.isPenDown)) {

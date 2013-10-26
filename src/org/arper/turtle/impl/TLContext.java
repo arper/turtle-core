@@ -17,6 +17,7 @@ public class TLContext {
         this.anglePolicy = config.getAnglePolicy();
         this.simulator = new TLSimulator(config.getSimulationCores(),
                 config.getSimulationStepMicros(),
+                config.getSimulationMaxStutterMicros(),
                 config.getSimulationMaxBusyWaitMicros());
 
         this.turtles = Lists.newArrayList();

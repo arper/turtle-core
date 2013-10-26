@@ -7,6 +7,7 @@ import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
 
 import org.arper.turtle.Turtle;
+import org.arper.turtle.impl.display.TLAnimation;
 import org.imgscalr.Scalr;
 import org.imgscalr.Scalr.Method;
 

@@ -22,11 +22,13 @@ public class TLSimulator {
 
 	public TLSimulator(int numSimulationCores,
 	                   long interpolationStepMicros,
+                       long maxInterpolationStutterMicros,
 	                   long maxBlockingSimulationPeriodMicros) {
 		settings = new TLSimulationSettings();
 		actionScheduler = createScheduler(numSimulationCores);
 
 		this.interpolationStepMicros = interpolationStepMicros;
+		this.maxInterpolationStutterMicros = maxInterpolationStutterMicros;
 		this.maxBlockingSimulationPeriodMicros = maxBlockingSimulationPeriodMicros;
 		this.turtleState = CacheBuilder.newBuilder()
 		    .concurrencyLevel(numSimulationCores)
@@ -42,6 +44,7 @@ public class TLSimulator {
 
     private final TLSimulationSettings settings;
     private final long interpolationStepMicros;
+    private final long maxInterpolationStutterMicros;
     private final long maxBlockingSimulationPeriodMicros;
     private final ScheduledExecutorService actionScheduler;
 
@@ -171,8 +174,8 @@ public class TLSimulator {
         public void run() {
             long time = currentTimeMicros();
             float elapsedMicros = (time - lastExecutionTimeMicros);
-            if (elapsedMicros > interpolationStepMicros) {
-                elapsedMicros = interpolationStepMicros;
+            if (elapsedMicros > maxInterpolationStutterMicros) {
+                elapsedMicros = maxInterpolationStutterMicros;
             }
 
             float elapsedSeconds = realToSimulationTime(elapsedMicros) / MICROS_IN_SECOND;

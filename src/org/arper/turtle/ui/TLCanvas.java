@@ -20,11 +20,11 @@ import javax.swing.JPanel;
 import org.arper.turtle.TLUtils;
 import org.arper.turtle.Turtle;
 import org.arper.turtle.impl.TLAwtUtilities;
-import org.arper.turtle.impl.TLDisplayUtilities;
 import org.arper.turtle.impl.TLRenderer;
 import org.arper.turtle.impl.TLSingletonContext;
-import org.arper.turtle.impl.TLTurtleRenderer;
 import org.arper.turtle.impl.TurtleLogging;
+import org.arper.turtle.impl.display.TLDisplayUtilities;
+import org.arper.turtle.impl.display.TLTurtleRenderer;
 
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
@@ -162,7 +162,7 @@ public class TLCanvas extends JPanel {
 	}
 
 	public void markDirty(Rectangle r) {
-		r.grow(100, 100);
+//		r.grow(100, 100);
         r.translate(drawableWidth / 2, drawableHeight / 2);
 		scaleRectangle(r, zoom);
 		repaint(r);

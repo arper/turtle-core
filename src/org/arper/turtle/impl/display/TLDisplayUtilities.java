@@ -1,4 +1,4 @@
-package org.arper.turtle.impl;
+package org.arper.turtle.impl.display;
 
 import java.awt.AlphaComposite;
 import java.awt.Color;
@@ -263,8 +263,11 @@ public class TLDisplayUtilities {
         /* Only request loading of the given image. If it isn't ready, return null
          * and let caller deal with scaling manually, or try again.
          */
-        imageCache.refresh(key);
-        return imageCache.getIfPresent(key);
+        BufferedImage image = imageCache.getIfPresent(key);
+        if (image == null) {
+            imageCache.refresh(key);
+        }
+        return image;
     }
 
     public static void drawImage(Graphics2D g, BufferedImage image, Composite composite) {

@@ -1,4 +1,4 @@
-package org.arper.turtle.impl;
+package org.arper.turtle.impl.display;
 
 import java.awt.image.BufferedImage;
 
