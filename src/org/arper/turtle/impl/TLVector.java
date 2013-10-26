@@ -2,7 +2,6 @@ package org.arper.turtle.impl;
 
 import java.awt.geom.Point2D;
 
-import org.arper.turtle.TLSimulator;
 
 public class TLVector {
 

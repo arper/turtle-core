@@ -1,4 +1,4 @@
-package org.arper.turtle;
+package org.arper.turtle.impl;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -6,12 +6,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
 
-import org.arper.turtle.impl.TLAction;
-import org.arper.turtle.impl.TLAwtUtilities;
-import org.arper.turtle.impl.TLLockingContext;
-import org.arper.turtle.impl.TurtleState;
+import org.arper.turtle.TLSimulationSettings;
+import org.arper.turtle.Turtle;
 
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
@@ -21,27 +18,18 @@ import com.google.common.cache.LoadingCache;
 
 public class TLSimulator {
 
-    private static final long NANOS_IN_MICRO = 1000L;
-    private static final float MICROS_IN_SECOND = 1000000.0f;
     public static final float SIMULATION_EPSILON = .0001f;
 
-	private final TLSimulationSettings settings;
-	private final TLLockingContext lockingContext;
-	private final long interpolationStepMicros;
-    private final ScheduledExecutorService actionScheduler;
-
-    private final LoadingCache<Turtle, TurtleState> turtleState;
-
 	public TLSimulator(int numSimulationCores,
-                       TLLockingContext lockingContext,
-	                   long interpolationStepMicros) {
+	                   long interpolationStepMicros,
+	                   long maxBlockingSimulationPeriodMicros) {
 		settings = new TLSimulationSettings();
 		actionScheduler = createScheduler(numSimulationCores);
 
-		this.lockingContext = lockingContext;
 		this.interpolationStepMicros = interpolationStepMicros;
+		this.maxBlockingSimulationPeriodMicros = maxBlockingSimulationPeriodMicros;
 		this.turtleState = CacheBuilder.newBuilder()
-		    .concurrencyLevel(TLApplicationConfig.TL_NUM_SIMULATION_CORES)
+		    .concurrencyLevel(numSimulationCores)
 		    .weakKeys()
 		    .build(new CacheLoader<Turtle, TurtleState>() {
                 @Override
@@ -51,6 +39,13 @@ public class TLSimulator {
 		    });
 
 	}
+
+    private final TLSimulationSettings settings;
+    private final long interpolationStepMicros;
+    private final long maxBlockingSimulationPeriodMicros;
+    private final ScheduledExecutorService actionScheduler;
+
+    private final LoadingCache<Turtle, TurtleState> turtleState;
 
 	private static ScheduledExecutorService createScheduler(int poolSize) {
 	    return Executors.newScheduledThreadPool(poolSize, new ThreadFactory() {
@@ -89,19 +84,15 @@ public class TLSimulator {
 	}
 
 	private void invokeAndWaitInterruptibly(TLAction a, TurtleState t) throws InterruptedException {
-        Lock l = lockingContext.getLock(t);
-        l.lockInterruptibly();
         float spinEndTime = 0;
-        try {
+        synchronized (t) {
             float estimatedTimeMicros = a.getCompletionTime(t)
                     * MICROS_IN_SECOND;
-            if (estimatedTimeMicros < interpolationStepMicros) {
+            if (estimatedTimeMicros < maxBlockingSimulationPeriodMicros) {
                 long startMicros = currentTimeMicros();
                 a.perform(t, Float.MAX_VALUE);
                 spinEndTime = startMicros + estimatedTimeMicros;
             }
-        } finally {
-            l.unlock();
         }
 
         /* If we completed the action without the need to schedule interpolation,
@@ -109,6 +100,9 @@ public class TLSimulator {
          */
         if (spinEndTime > 0) {
             spin(spinEndTime);
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
             return;
         }
 
@@ -122,6 +116,9 @@ public class TLSimulator {
 	        /* spinning */
 	    }
 	}
+
+    private static final long NANOS_IN_MICRO = 1000L;
+    private static final float MICROS_IN_SECOND = 1000000.0f;
 
 	private static long currentTimeMicros() {
 	    return System.nanoTime() / NANOS_IN_MICRO;

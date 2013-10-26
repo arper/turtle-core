@@ -1,6 +1,5 @@
 package org.arper.turtle.impl;
 
-import org.arper.turtle.TLContext;
 
 public class TLSingletonContext {
 

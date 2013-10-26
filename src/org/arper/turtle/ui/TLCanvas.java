@@ -17,7 +17,6 @@ import java.util.concurrent.ExecutionException;
 
 import javax.swing.JPanel;
 
-import org.arper.turtle.TLApplicationConfig;
 import org.arper.turtle.TLUtils;
 import org.arper.turtle.Turtle;
 import org.arper.turtle.impl.TLDisplayUtilities;
@@ -45,8 +44,9 @@ public class TLCanvas extends JPanel {
 	    drawableHeight = height;
 	    parent = w;
 
+	    /* TODO: module state */
         this.renderers = CacheBuilder.newBuilder()
-            .concurrencyLevel(TLApplicationConfig.TL_NUM_SIMULATION_CORES)
+            .concurrencyLevel(4)
             .weakKeys()
             .build(new CacheLoader<Turtle, TLRenderer>() {
                 @Override

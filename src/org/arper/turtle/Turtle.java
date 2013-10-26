@@ -4,10 +4,12 @@ import java.awt.Color;
 import java.awt.geom.Point2D;
 import java.util.List;
 
+import org.arper.turtle.config.AnglePolicy;
 import org.arper.turtle.impl.TLAction;
 import org.arper.turtle.impl.TLActions;
 import org.arper.turtle.impl.TLAnimation;
 import org.arper.turtle.impl.TLRenderer;
+import org.arper.turtle.impl.TLSimulator;
 import org.arper.turtle.impl.TLSingletonContext;
 import org.arper.turtle.impl.TurtleState;
 import org.arper.turtle.ui.TLCanvas;
@@ -402,7 +404,7 @@ public class Turtle {
 
 	/* Helper method to convert 'angle' interpreted under our anglePolicy to radians. */
 	private static double clientAngleToRadians(double angle) {
-		switch (TLApplicationConfig.TL_ANGLE_POLICY) {
+		switch (TLSingletonContext.get().getAnglePolicy()) {
 		case Radians: 	return angle;
 		case Degrees: 	return angle * Math.PI / 180;
 		default: 		return 0; // unreachable
@@ -411,7 +413,7 @@ public class Turtle {
 
 	/* Helper method to convert 'angle' from radians to the client's anglePolicy. */
 	private static double radiansToClientAngle(double angle) {
-		switch (TLApplicationConfig.TL_ANGLE_POLICY) {
+		switch (TLSingletonContext.get().getAnglePolicy()) {
 		case Radians: 	return angle;
 		case Degrees:	return angle * 180 / Math.PI;
 		default:		return 0; // unreachable

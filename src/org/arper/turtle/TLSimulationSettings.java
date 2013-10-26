@@ -2,12 +2,17 @@ package org.arper.turtle;
 
 public class TLSimulationSettings {
 
+    private volatile boolean paused = true;
+    private volatile double animationSpeed = 1.0;
+
     public boolean isPaused() {
         return paused;
     }
+
     public void pause() {
         paused = true;
     }
+
     public void unpause() {
         paused = false;
     }
@@ -22,8 +27,5 @@ public class TLSimulationSettings {
         }
         this.animationSpeed = animationSpeed;
     }
-
-    private boolean paused = true;
-    private double animationSpeed = 1.0;
 
 }

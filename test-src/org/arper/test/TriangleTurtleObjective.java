@@ -2,21 +2,20 @@ package org.arper.test;
 import java.awt.Color;
 
 import org.arper.turtle.TLApplication;
-import org.arper.turtle.TLContext;
 import org.arper.turtle.Turtle;
-import org.arper.turtle.controllers.SingleTurtleController;
+import org.arper.turtle.config.TLApplicationConfig;
+import org.arper.turtle.controller.TLSingleTurtleObjective;
 
 
-public class TriangleTurtleController extends SingleTurtleController {
+public class TriangleTurtleObjective extends TLSingleTurtleObjective {
 
 	public static void main(String[] args) {
-	    TLContext context = new TLContext(500, 500);
-	    context.createTurtle();
-	    context.getWindow().setVisible(true);
+	    new TLApplication(TLApplicationConfig.DEFAULT)
+	        .startObjectiveWithNewTurtles(new TriangleTurtleObjective());
 	}
 
     @Override
-    public void runWithTurtle(Turtle t, TLApplication app, Object[] args) {
+    public void run(Turtle t, TLApplication app, Object[] args) {
         t.pause(3);
 
         t.startFillShape();
