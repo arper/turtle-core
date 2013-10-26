@@ -1,6 +1,7 @@
 package org.arper.turtle;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.GraphicsEnvironment;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,6 +22,10 @@ public class TLUtils {
 
     public static String getDefaultFontFamily() {
         return defaultFontFamily;
+    }
+    
+    public static Font getDefaultFont() {
+        return new Font(TLUtils.getDefaultFontFamily(), Font.PLAIN, 13);
     }
 
     public static Color randomColor() {

@@ -8,7 +8,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 import org.arper.turtle.TLSimulationSettings;
-import org.arper.turtle.Turtle;
+import org.arper.turtle.TLTurtle;
 
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
@@ -33,10 +33,10 @@ public class TLSimulator {
 		this.turtleState = CacheBuilder.newBuilder()
 		    .concurrencyLevel(numSimulationCores)
 		    .weakKeys()
-		    .build(new CacheLoader<Turtle, TurtleState>() {
+		    .build(new CacheLoader<TLTurtle, TLTurtleState>() {
                 @Override
-                public TurtleState load(Turtle key) throws Exception {
-                    return new TurtleState();
+                public TLTurtleState load(TLTurtle key) throws Exception {
+                    return new TLTurtleState();
                 }
 		    });
 
@@ -48,7 +48,7 @@ public class TLSimulator {
     private final long maxBlockingSimulationPeriodMicros;
     private final ScheduledExecutorService actionScheduler;
 
-    private final LoadingCache<Turtle, TurtleState> turtleState;
+    private final LoadingCache<TLTurtle, TLTurtleState> turtleState;
 
 	private static ScheduledExecutorService createScheduler(int poolSize) {
 	    return Executors.newScheduledThreadPool(poolSize, new ThreadFactory() {
@@ -69,7 +69,7 @@ public class TLSimulator {
 	    return settings;
 	}
 
-	public TurtleState getTurtleState(Turtle turtle) {
+	public TLTurtleState getTurtleState(TLTurtle turtle) {
 	    try {
             return turtleState.get(turtle);
         } catch (ExecutionException e) {
@@ -77,7 +77,7 @@ public class TLSimulator {
         }
 	}
 
-	public void invokeAndWait(TLAction a, Turtle t) {
+	public void invokeAndWait(TLAction a, TLTurtle t) {
 	    TLAwtUtilities.assertOffAwtThread();
 
 	    try {
@@ -87,7 +87,7 @@ public class TLSimulator {
 	    }
 	}
 
-	private void markDirty(Turtle t) {
+	private void markDirty(TLTurtle t) {
 	    TLSingletonContext.get().getWindow().getCanvas().getRenderer(t).markDirty();
 	}
 
@@ -99,7 +99,7 @@ public class TLSimulator {
 	    return settings.isPaused()? Float.MAX_VALUE : time / settings.getAnimationSpeed();
 	}
 
-	private void invokeAndWaitInterruptibly(TLAction a, Turtle t) throws InterruptedException {
+	private void invokeAndWaitInterruptibly(TLAction a, TLTurtle t) throws InterruptedException {
         float spinEndTime = 0;
         synchronized (t) {
             float estimatedTimeMicros = a.getCompletionTime(getTurtleState(t))
@@ -145,7 +145,7 @@ public class TLSimulator {
 
 	private class TLActionInterpolationRunnable implements Runnable {
 
-	    public TLActionInterpolationRunnable(TLAction action, Turtle turtle) {
+	    public TLActionInterpolationRunnable(TLAction action, TLTurtle turtle) {
             this.action = action;
             this.turtle = turtle;
             this.latch = new CountDownLatch(1);
@@ -154,7 +154,7 @@ public class TLSimulator {
         }
 
         private final TLAction action;
-        private final Turtle turtle;
+        private final TLTurtle turtle;
 	    private final CountDownLatch latch;
 
         private long lastExecutionTimeMicros;

@@ -13,35 +13,34 @@ import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.List;
 
-import org.arper.turtle.PathType;
-import org.arper.turtle.Turtle;
-import org.arper.turtle.impl.DefaultTurtleAnimation;
+import org.arper.turtle.TLPathType;
+import org.arper.turtle.TLTurtle;
 import org.arper.turtle.impl.TLAwtUtilities;
+import org.arper.turtle.impl.TLDefaultTurtleAnimation;
 import org.arper.turtle.impl.TLRenderer;
 import org.arper.turtle.impl.TLSingletonContext;
-import org.arper.turtle.impl.TurtleState;
-import org.arper.turtle.ui.TLCanvas;
+import org.arper.turtle.impl.TLTurtleState;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-public class TLTurtleRenderer implements TLRenderer {
+public class TLJ2DTurtleRenderer implements TLRenderer {
     private static final AlphaComposite STATUS_COMPOSITE = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.8f);
     private static final int MAX_SAMPLED_POINTS = 30;
 
-    public TLTurtleRenderer(Turtle owner) {
+    public TLJ2DTurtleRenderer(TLTurtle owner) {
         this.owner = owner;
-        turtleAnimation = new DefaultTurtleAnimation();
+        turtleAnimation = new TLDefaultTurtleAnimation();
         sampledPathPoints = Lists.newArrayList();
     }
 
-    private final Turtle owner;
-    private TurtleState renderedState;
-    private TurtleState newState;
+    private final TLTurtle owner;
+    private TLTurtleState renderedState;
+    private TLTurtleState newState;
     private List<Point2D.Float> sampledPathPoints;
 
-    private TLStatusBubble statusBubble;
+    private TLJ2DStatusBubble statusBubble;
     private TLAnimation turtleAnimation;
 
     private Composite turtleComposite;
@@ -58,7 +57,7 @@ public class TLTurtleRenderer implements TLRenderer {
 
         /* turtleComposite */
         if (noState || !Objects.equal(newState.color, renderedState.color)) {
-            turtleComposite = new TLDisplayUtilities.MultiplyColorComposite(newState.color, 0.4f);
+            turtleComposite = new TLJ2DUtilities.MultiplyColorComposite(newState.color, 0.4f);
         }
 
         /* statusBubble */
@@ -68,7 +67,7 @@ public class TLTurtleRenderer implements TLRenderer {
             } else {
                 float start = (float) turtleAnimation.getSize(owner) * .3f;
                 float len = (float) 15;
-                statusBubble = new TLStatusBubble(start, -start, len, newState.status, 8);
+                statusBubble = new TLJ2DStatusBubble(start, -start, len, newState.status, 8);
             }
         }
 
@@ -78,7 +77,7 @@ public class TLTurtleRenderer implements TLRenderer {
 
         if (strokeChange) {
             int cap, join;
-            if (newState.pathType == PathType.Sharp) {
+            if (newState.pathType == TLPathType.Sharp) {
                 cap = BasicStroke.CAP_BUTT;
                 join = BasicStroke.JOIN_BEVEL;
             } else {
@@ -98,7 +97,7 @@ public class TLTurtleRenderer implements TLRenderer {
             g.setColor(renderedState.color);
             Stroke oldStroke = g.getStroke();
             g.setStroke(stroke);
-            TLDisplayUtilities.drawPath(g, sampledPathPoints);
+            TLJ2DUtilities.drawPath(g, sampledPathPoints);
             g.setStroke(oldStroke);
             sampledPathPoints.clear();
         }
@@ -118,7 +117,7 @@ public class TLTurtleRenderer implements TLRenderer {
 
     private void resampleIfNecessary() {
         if (sampledPathPoints.size() >= MAX_SAMPLED_POINTS * 2 + 1) {
-            sampledPathPoints = TLDisplayUtilities.sampleListUniformly(sampledPathPoints, MAX_SAMPLED_POINTS);
+            sampledPathPoints = TLJ2DUtilities.sampleListUniformly(sampledPathPoints, MAX_SAMPLED_POINTS);
         }
     }
 
@@ -134,7 +133,7 @@ public class TLTurtleRenderer implements TLRenderer {
     }
 
     private void markDirtyAtLocation(Point2D loc) {
-        TLCanvas canvas = TLSingletonContext.get().getWindow().getCanvas();
+        TLJ2DCanvas canvas = (TLJ2DCanvas) TLSingletonContext.get().getWindow().getCanvas();
 
         if (statusBubble != null) {
             Rectangle r = statusBubble.getShape().getBounds();
@@ -151,7 +150,7 @@ public class TLTurtleRenderer implements TLRenderer {
         TLAwtUtilities.assertOnAwtThread();
 
         if (newState == null) {
-            newState = new TurtleState();
+            newState = new TLTurtleState();
         }
 
         newState.set(TLSingletonContext.get().getSimulator().getTurtleState(owner));
@@ -168,7 +167,7 @@ public class TLTurtleRenderer implements TLRenderer {
         drawTurtle(g);
 
         if (renderedState == null) {
-            renderedState = new TurtleState();
+            renderedState = new TLTurtleState();
         }
         renderedState.set(newState);
     }
@@ -190,7 +189,7 @@ public class TLTurtleRenderer implements TLRenderer {
         if (!sampledPathPoints.isEmpty()) {
             Stroke oldStroke = g.getStroke();
             g.setStroke(stroke);
-            TLDisplayUtilities.drawPath(g, sampledPathPoints);
+            TLJ2DUtilities.drawPath(g, sampledPathPoints);
             g.setStroke(oldStroke);
         }
     }
@@ -235,7 +234,7 @@ public class TLTurtleRenderer implements TLRenderer {
             double rotateAmount = newState.heading + turtleAnimation.getPieceRotation(i, elapsed);
             g.rotate(rotateAmount);
 
-            BufferedImage pretty = TLDisplayUtilities.getScaledImage((int) Math.ceil(size), images[i]);
+            BufferedImage pretty = TLJ2DUtilities.getScaledImage((int) Math.ceil(size), images[i]);
             if (pretty != null) {
                 g.translate(-turtleAnimation.getCenterX(i) * pretty.getWidth(),
                         -turtleAnimation.getCenterY(i) * pretty.getHeight());
@@ -243,7 +242,7 @@ public class TLTurtleRenderer implements TLRenderer {
                 g.scale(scale, scale);
                 g.translate(-tX, -tY);
             }
-            TLDisplayUtilities.drawImage(g, pretty, turtleComposite);
+            TLJ2DUtilities.drawImage(g, pretty, turtleComposite);
 
             g.setTransform(at2);
         }

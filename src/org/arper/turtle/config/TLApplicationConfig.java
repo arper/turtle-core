@@ -3,7 +3,7 @@ package org.arper.turtle.config;
 
 public interface TLApplicationConfig {
 
-    AnglePolicy getAnglePolicy();
+    TLAnglePolicy getAnglePolicy();
 
     int getCanvasWidth();
     int getCanvasHeight();
@@ -16,8 +16,8 @@ public interface TLApplicationConfig {
     TLApplicationConfig DEFAULT = new TLApplicationConfig() {
 
         @Override
-        public AnglePolicy getAnglePolicy() {
-            return AnglePolicy.Degrees;
+        public TLAnglePolicy getAnglePolicy() {
+            return TLAnglePolicy.Degrees;
         }
 
         @Override

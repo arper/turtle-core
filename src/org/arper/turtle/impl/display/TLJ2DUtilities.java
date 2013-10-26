@@ -34,7 +34,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-public class TLDisplayUtilities {
+public class TLJ2DUtilities {
 
     public static boolean isMacOS = System.getProperty("os.name").toLowerCase().contains("mac");
 
@@ -271,7 +271,7 @@ public class TLDisplayUtilities {
     }
 
     public static void drawImage(Graphics2D g, BufferedImage image, Composite composite) {
-        if (TLDisplayUtilities.isMacOS) {
+        if (TLJ2DUtilities.isMacOS) {
             g.drawImage(image, 0, 0, null);
         } else {
             Composite oldComposite = g.getComposite();
@@ -313,7 +313,7 @@ public class TLDisplayUtilities {
         g.setComposite(oldComposite);
     }
 
-    private TLDisplayUtilities() {
+    private TLJ2DUtilities() {
         /* do not instantiate */
     }
 }

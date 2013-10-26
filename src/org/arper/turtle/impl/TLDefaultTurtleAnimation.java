@@ -6,13 +6,13 @@ import java.net.URL;
 import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
 
-import org.arper.turtle.Turtle;
+import org.arper.turtle.TLTurtle;
 import org.arper.turtle.impl.display.TLAnimation;
 import org.imgscalr.Scalr;
 import org.imgscalr.Scalr.Method;
 
 
-public class DefaultTurtleAnimation implements TLAnimation {
+public class TLDefaultTurtleAnimation implements TLAnimation {
 
 	protected static final int PREFERRED_SIZE = 128;
 	private static final BufferedImage[] defaultImages;
@@ -67,12 +67,12 @@ public class DefaultTurtleAnimation implements TLAnimation {
 	}
 
 	@Override
-	public double getSize(Turtle t) {
+	public double getSize(TLTurtle t) {
 		return t.getSize() * 5 + 15;
 	}
 
 	@Override
-	public double getCursorSize(Turtle t) {
+	public double getCursorSize(TLTurtle t) {
 		return t.getSize() * 1.4;
 	}
 

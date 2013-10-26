@@ -2,6 +2,6 @@ package org.arper.turtle.impl;
 
 
 public interface TLAction {
-    float perform(TurtleState t, float seconds);
-    float getCompletionTime(TurtleState t);
+    float perform(TLTurtleState t, float seconds);
+    float getCompletionTime(TLTurtleState t);
 }

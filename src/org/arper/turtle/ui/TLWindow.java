@@ -42,8 +42,9 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.arper.turtle.TLSimulationSettings;
-import org.arper.turtle.Turtle;
+import org.arper.turtle.TLTurtle;
 import org.arper.turtle.impl.TLSingletonContext;
+import org.arper.turtle.impl.display.TLJ2DCanvas;
 
 
 //import com.alee.laf.WebLookAndFeel;
@@ -51,7 +52,7 @@ import org.arper.turtle.impl.TLSingletonContext;
 
 @SuppressWarnings("serial")
 public class TLWindow extends JFrame {
-	private TLCanvas canvas;
+	private TLJ2DCanvas canvas;
 	private JToolBar controlPanel;
 	private JComponent pauseOverlay;
 	private JButton playButton;
@@ -200,7 +201,7 @@ public class TLWindow extends JFrame {
 
 	private void updateAction() {
 	    try {
-	        CodeSource codeSource = Turtle.class.getProtectionDomain().getCodeSource();
+	        CodeSource codeSource = TLTurtle.class.getProtectionDomain().getCodeSource();
 	        File jarFile = new File(codeSource.getLocation().toURI().getPath());
 	        String libName = jarFile.getName();
 	        if (libName.matches("turtle-learning-v.+\\.jar")) {
@@ -249,7 +250,7 @@ public class TLWindow extends JFrame {
     private void layoutCanvas(int width, int height) {
 	    setLayout(new BorderLayout());
 
-        canvas = new TLCanvas(width, height, this);
+        canvas = new TLJ2DCanvas(width, height);
         canvas.setBackground(Color.WHITE);
 
 

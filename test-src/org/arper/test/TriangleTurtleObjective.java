@@ -2,7 +2,7 @@ package org.arper.test;
 import java.awt.Color;
 
 import org.arper.turtle.TLApplication;
-import org.arper.turtle.Turtle;
+import org.arper.turtle.TLTurtle;
 import org.arper.turtle.controller.TLSingleTurtleObjective;
 
 
@@ -13,7 +13,7 @@ public class TriangleTurtleObjective extends TLSingleTurtleObjective {
 	}
 
     @Override
-    public void run(Turtle t, TLApplication app, Object[] args) {
+    public void run(TLTurtle t, TLApplication app, Object[] args) {
         t.pause(3);
 
         t.startFillShape();

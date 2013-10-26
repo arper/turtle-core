@@ -4,13 +4,13 @@ import java.awt.Color;
 import java.awt.geom.Point2D;
 import java.util.List;
 
-import org.arper.turtle.PathType;
+import org.arper.turtle.TLPathType;
 
 import com.google.common.collect.Lists;
 
-public class TurtleState {
+public class TLTurtleState {
 
-    public TurtleState() {
+    public TLTurtleState() {
         location = new Point2D.Float();
         fillShape = Lists.newArrayList();
 
@@ -24,7 +24,7 @@ public class TurtleState {
     public volatile float turningSpeed;   // radians per second
 
     public volatile Color color;           // note: non-null
-    public volatile PathType pathType;
+    public volatile TLPathType pathType;
     public volatile float thickness;       // pixels
     public volatile boolean isPenDown;
 
@@ -42,7 +42,7 @@ public class TurtleState {
         turningSpeed = TLVector.PI_F * 1.5f;
 
         color = Color.BLACK;
-        pathType = PathType.Rounded;
+        pathType = TLPathType.Rounded;
         thickness = 8;
         isPenDown = true;
 
@@ -53,7 +53,7 @@ public class TurtleState {
         data = null;
     }
 
-    public void set(TurtleState other) {
+    public void set(TLTurtleState other) {
         this.location.setLocation(other.location);
         this.movementSpeed = other.movementSpeed;
         this.heading = other.heading;

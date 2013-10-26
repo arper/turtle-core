@@ -1,6 +1,6 @@
 package org.arper.turtle.config;
 
-import org.arper.turtle.Turtle;
+import org.arper.turtle.TLTurtle;
 
 
 /**
@@ -11,11 +11,11 @@ import org.arper.turtle.Turtle;
  * The default value for the application's angle policy is Degrees. <p>
  *
  * @see {@link TLApplicationConfig#getAnglePolicy()}
- * @see {@link Turtle#turnLeft(double)}
- * @see {@link Turtle#getHeading()}
+ * @see {@link TLTurtle#turnLeft(double)}
+ * @see {@link TLTurtle#getHeading()}
  *
  */
-public enum AnglePolicy {
+public enum TLAnglePolicy {
 	Radians,
 	Degrees
 }
