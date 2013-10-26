@@ -2,7 +2,7 @@ package org.arper.turtle.impl.display;
 
 import java.awt.image.BufferedImage;
 
-import org.arper.turtle.Turtle;
+import org.arper.turtle.TLTurtle;
 
 public interface TLAnimation {
     public abstract BufferedImage[] getImages();
@@ -15,8 +15,8 @@ public interface TLAnimation {
     public abstract double getCenterY(int piece);
     public abstract double getPieceRotation(int piece, double sec);
 
-    public abstract double getSize(Turtle t);
-    public abstract double getCursorSize(Turtle t);
+    public abstract double getSize(TLTurtle t);
+    public abstract double getCursorSize(TLTurtle t);
 
 
     public static final TLAnimation Empty = new TLAnimation() {
@@ -61,12 +61,12 @@ public interface TLAnimation {
         }
 
         @Override
-        public double getSize(Turtle t) {
+        public double getSize(TLTurtle t) {
             return 0;
         }
 
         @Override
-        public double getCursorSize(Turtle t) {
+        public double getCursorSize(TLTurtle t) {
             return 0;
         }
     };

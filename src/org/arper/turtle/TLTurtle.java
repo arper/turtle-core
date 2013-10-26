@@ -4,13 +4,13 @@ import java.awt.Color;
 import java.awt.geom.Point2D;
 import java.util.List;
 
-import org.arper.turtle.config.AnglePolicy;
+import org.arper.turtle.config.TLAnglePolicy;
 import org.arper.turtle.impl.TLAction;
 import org.arper.turtle.impl.TLActions;
 import org.arper.turtle.impl.TLRenderer;
 import org.arper.turtle.impl.TLSimulator;
 import org.arper.turtle.impl.TLSingletonContext;
-import org.arper.turtle.impl.TurtleState;
+import org.arper.turtle.impl.TLTurtleState;
 import org.arper.turtle.ui.TLCanvas;
 import org.arper.turtle.ui.TLWindow;
 
@@ -36,7 +36,7 @@ import com.google.common.collect.Lists;
  * <tt>turtle-learning.jar</tt> in your project's build path. Then, simply subclass this <tt>Turtle</tt> class
  * (for example, a new <tt>class TestTurtle extends Turtle</tt>) with a custom {@link #run} method that traces
  * a shape. Finally, add a <tt>public static void main</tt> method to your class that invokes
- * {@link Turtle#runTurtleProgram(Turtle...) runTurtleProgram}. </p>
+ * {@link TLTurtle#runTurtleProgram(TLTurtle...) runTurtleProgram}. </p>
  * <pre>
  * {@code
  * import org.atl.Turtle; <br>
@@ -87,13 +87,13 @@ import com.google.common.collect.Lists;
  * <li> {@link #setMovementSpeed(double) setMovementSpeed(pixelsPerSecond)} / {@link #getMovementSpeed()} </li>
  * <li> {@link #setTurningSpeed(double) setTurningSpeed(anglePerSecond)} / {@link #getTurningSpeed()} </li>
  * <li> {@link #setStatus(String) setStatus("message")} / {@link #getStatus()} </li>
- * <li> {@link #setPathType(PathType) setPathType(PathType)} / {@link #getPathType()} </li>
+ * <li> {@link #setPathType(TLPathType) setPathType(PathType)} / {@link #getPathType()} </li>
  * </ul>
  *
  * <h3 id="policy">IV. Angle Policy </h3>
  * You are allowed to control how your Turtle interprets angle measures (that is, in degrees or radians). Simply
- * call the {@link #setAnglePolicy(AnglePolicy) setAnglePolicy} method with the appropriate {@link AnglePolicy} argument:
- * {@link AnglePolicy#Degrees AnglePolicy.Degrees} or {@link AnglePolicy#Radians AnglePolicy.Radians}. By default,
+ * call the {@link #setAnglePolicy(TLAnglePolicy) setAnglePolicy} method with the appropriate {@link TLAnglePolicy} argument:
+ * {@link TLAnglePolicy#Degrees AnglePolicy.Degrees} or {@link TLAnglePolicy#Radians AnglePolicy.Radians}. By default,
  * the turtle's angle policy is set to Degrees. <p>
  *
  * Setting a turtle's angle policy affects all of the methods {@link #turnLeft(double) turnLeft}, {@link #turnRight(double) turnRight},
@@ -112,10 +112,10 @@ import com.google.common.collect.Lists;
  * @author Alex Ryan
  * @version 1
  */
-public class Turtle {
+public class TLTurtle {
 
 	private List<Point2D> fillShape;// for use to produce fillShapes
-	private List<TurtleListener> listeners;
+	private List<TLListener> listeners;
 
 	/*--------------------------------------------------------------*/
 	/*==============================================================*/
@@ -129,13 +129,13 @@ public class Turtle {
 	 *
 	 * @see #reset()
 	 */
-	public Turtle() {
+	public TLTurtle() {
 		fillShape = Lists.newArrayList();
 		listeners = Lists.newArrayList();
 		reset();
 	}
 
-	protected TurtleState state() {
+	protected TLTurtleState state() {
 	    return TLSingletonContext.get().getSimulator().getTurtleState(this);
 	}
 
@@ -201,7 +201,7 @@ public class Turtle {
 	 * <b>Please note that even your AnglePolicy gets reset (to Degrees)</b>. <br />
 	 * <b>(*)</b> Note: If this turtle has not yet been registered with any canvases, the turtle's
 	 * location is unchanged by <tt>reset()</tt>, and the unregistered, untouched default location is <tt>(0, 0)</tt>. This
-	 * should never matter to you if you are using the recommended {@link Turtle#runTurtleProgram(Turtle...)}
+	 * should never matter to you if you are using the recommended {@link TLTurtle#runTurtleProgram(TLTurtle...)}
 	 * method to run your turtles.
 	 */
 	public void reset() {
@@ -292,7 +292,7 @@ public class Turtle {
 
 	/**
 	 * Sets the path sharpness for this Turtle's trail. The two accepted
-	 * values are {@link PathType#Rounded} and {@link PathType#Sharp}.
+	 * values are {@link TLPathType#Rounded} and {@link TLPathType#Sharp}.
 	 * A <tt>Rounded</tt> path has a semicircle capping the ends of all segments
 	 * to make it less choppy under some circumstances, where a <tt>Sharp</tt> path
 	 * could create a wedge-shaped gap where two thick segments meet
@@ -309,27 +309,27 @@ public class Turtle {
 	 *  </pre>
 	 *  </blockquote>
 	 *
-	 * @param type the type of path; one of {@link PathType#Rounded} or {@link PathType#Sharp}
+	 * @param type the type of path; one of {@link TLPathType#Rounded} or {@link TLPathType#Sharp}
 	 * @see #getPathType()
-	 * @see PathType
+	 * @see TLPathType
 	 */
-	public void setPathType(PathType type) {
+	public void setPathType(TLPathType type) {
 	    state().pathType = type;
 	}
 
 	/**
 	 * Returns the path sharpness type that is used to draw the Turtle's trail. For more
-	 * information, see {@link #setPathType(PathType)}. <p>
+	 * information, see {@link #setPathType(TLPathType)}. <p>
 	 *
-	 * The default value is {@link PathType#Sharp}. For more information on defaults,
+	 * The default value is {@link TLPathType#Sharp}. For more information on defaults,
 	 * see {@link #reset()}.
 	 *
 	 * @return the path type of this turtle
 	 *
-	 * @see #setPathType(PathType)
-	 * @see PathType
+	 * @see #setPathType(TLPathType)
+	 * @see TLPathType
 	 */
-	public PathType getPathType() {
+	public TLPathType getPathType() {
 		return state().pathType;
 	}
 
@@ -352,7 +352,7 @@ public class Turtle {
 	/**
 	 * Causes the turtle to leave a trail as he moves (until the next {@link #penUp()}). The
 	 * characteristics of the generated trail can be modified by the {@link #setSize(double) setSize},
-	 * {@link #setColor(Color) setColor}, and {@link #setPathType(PathType) setPathType} methods. <p>
+	 * {@link #setColor(Color) setColor}, and {@link #setPathType(TLPathType) setPathType} methods. <p>
 	 *
 	 * The inverse of this method is {@link #penUp()}. As should be expected, additional calls to
 	 * <tt>penDown()</tt> before any <tt>penUp()</tt> have no effect. <p>
@@ -517,13 +517,13 @@ public class Turtle {
 	public void fireEvent(String message) {
 	    synchronized(listeners) {
 	        /* TODO: dispatch this on different thread */
-	        for (TurtleListener listener : listeners) {
+	        for (TLListener listener : listeners) {
 	            listener.onTurtleEvent(message, this);
 	        }
 	    }
 	}
 
-	public void addListener(TurtleListener listener) {
+	public void addListener(TLListener listener) {
 	    synchronized(listeners) {
     	    if (!listeners.contains(listener)) {
     	        listeners.add(listener);
@@ -531,7 +531,7 @@ public class Turtle {
 	    }
 	}
 
-	public void removeListener(TurtleListener listener) {
+	public void removeListener(TLListener listener) {
 	    synchronized(listeners) {
 	        listeners.add(listener);
 	    }

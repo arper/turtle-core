@@ -2,8 +2,8 @@ package org.arper.turtle.impl;
 
 import java.util.List;
 
-import org.arper.turtle.Turtle;
-import org.arper.turtle.config.AnglePolicy;
+import org.arper.turtle.TLTurtle;
+import org.arper.turtle.config.TLAnglePolicy;
 import org.arper.turtle.config.TLApplicationConfig;
 import org.arper.turtle.ui.TLWindow;
 
@@ -25,13 +25,13 @@ public class TLContext {
         this.window = new TLWindow(config.getCanvasWidth(), config.getCanvasHeight());
     }
 
-    private final AnglePolicy anglePolicy;
+    private final TLAnglePolicy anglePolicy;
     private final TLWindow window;
     private final TLSimulator simulator;
-    private final List<Turtle> turtles;
+    private final List<TLTurtle> turtles;
     private final List<Thread> runningControllers;
 
-    public AnglePolicy getAnglePolicy() {
+    public TLAnglePolicy getAnglePolicy() {
         return anglePolicy;
     }
 
@@ -41,8 +41,8 @@ public class TLContext {
         thread.start();
     }
 
-    public Turtle createTurtle() {
-        Turtle t = new Turtle();
+    public TLTurtle createTurtle() {
+        TLTurtle t = new TLTurtle();
         synchronized(turtles) {
             turtles.add(t);
         }
@@ -57,7 +57,7 @@ public class TLContext {
         return simulator;
     }
 
-    public List<Turtle> getTurtles() {
+    public List<TLTurtle> getTurtles() {
         return turtles;
     }
 

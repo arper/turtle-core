@@ -18,10 +18,10 @@ package org.arper.turtle;
  *  </pre>
  *  </blockquote>
  *
- *  @see Turtle#getPathType()
- *  @see Turtle#setPathType(PathType)
+ *  @see TLTurtle#getPathType()
+ *  @see TLTurtle#setPathType(TLPathType)
  */
-public enum PathType {
+public enum TLPathType {
 	Rounded,
 	Sharp
 }

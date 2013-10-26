@@ -51,7 +51,7 @@ public final class TLApplication {
         }, "TLSimulationThread-" + controller.getClass().getSimpleName());
     }
 
-    public void startObjective(final TLObjective objective, final Turtle[] objectiveTurtles, final Object[] args) {
+    public void startObjective(final TLObjective objective, final TLTurtle[] objectiveTurtles, final Object[] args) {
         int turtleCount = objective.getObjectiveTurtleCount();
 
         Preconditions.checkArgument(objectiveTurtles.length == turtleCount,
@@ -77,7 +77,7 @@ public final class TLApplication {
                 "Objective doesn't use any turtles! [turtleCount=%s]",
                 turtleCount);
 
-        Turtle[] turtles = new Turtle[turtleCount];
+        TLTurtle[] turtles = new TLTurtle[turtleCount];
         for (int i = 0; i < turtleCount; ++i) {
             turtles[i] = context.createTurtle();
         }
