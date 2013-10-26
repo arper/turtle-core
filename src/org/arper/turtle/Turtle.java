@@ -7,7 +7,6 @@ import java.util.List;
 import org.arper.turtle.config.AnglePolicy;
 import org.arper.turtle.impl.TLAction;
 import org.arper.turtle.impl.TLActions;
-import org.arper.turtle.impl.TLAnimation;
 import org.arper.turtle.impl.TLRenderer;
 import org.arper.turtle.impl.TLSimulator;
 import org.arper.turtle.impl.TLSingletonContext;
@@ -556,14 +555,6 @@ public class Turtle {
 
 	public final String getStatus() {
 	    return state().status;
-	}
-
-	public void setAnimation(TLAnimation animation) {
-		renderer().setAnimation(animation);
-	}
-
-	public TLAnimation getAnimation() {
-		return renderer().getAnimation();
 	}
 
 	/*--------------------------------------------------------------*/

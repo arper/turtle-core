@@ -12,6 +12,11 @@ import com.google.common.base.Preconditions;
 
 public final class TLApplication {
 
+    public static void runObjectiveAsApplication(TLObjective objective, Object... args) {
+        new TLApplication(TLApplicationConfig.DEFAULT)
+            .startObjectiveWithNewTurtles(objective, args);
+    }
+
     public TLApplication(String configFileName) {
         /* TODO: TLApplication constructor */
         throw new UnsupportedOperationException("not yet implemented");

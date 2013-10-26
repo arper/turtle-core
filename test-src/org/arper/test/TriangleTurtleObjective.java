@@ -3,15 +3,13 @@ import java.awt.Color;
 
 import org.arper.turtle.TLApplication;
 import org.arper.turtle.Turtle;
-import org.arper.turtle.config.TLApplicationConfig;
 import org.arper.turtle.controller.TLSingleTurtleObjective;
 
 
 public class TriangleTurtleObjective extends TLSingleTurtleObjective {
 
 	public static void main(String[] args) {
-	    new TLApplication(TLApplicationConfig.DEFAULT)
-	        .startObjectiveWithNewTurtles(new TriangleTurtleObjective());
+	    TLApplication.runObjectiveAsApplication(new TriangleTurtleObjective());
 	}
 
     @Override

@@ -3,7 +3,7 @@ package org.arper.turtle;
 public class TLSimulationSettings {
 
     private volatile boolean paused = true;
-    private volatile double animationSpeed = 1.0;
+    private volatile float animationSpeed = 1.0f;
 
     public boolean isPaused() {
         return paused;
@@ -17,11 +17,11 @@ public class TLSimulationSettings {
         paused = false;
     }
 
-    public double getAnimationSpeed() {
+    public float getAnimationSpeed() {
         return animationSpeed;
     }
 
-    public void setAnimationSpeed(double animationSpeed) {
+    public void setAnimationSpeed(float animationSpeed) {
         if (animationSpeed <= 0) {
             throw new IllegalArgumentException("animation speed must be positive");
         }

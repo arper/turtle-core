@@ -190,7 +190,7 @@ public class TLActions {
                 turnAmount = 0;
                 return seconds;
             } else {
-                float turn = Math.signum(turnAmount) * seconds;
+                float turn = Math.signum(turnAmount) * seconds * t.turningSpeed;
                 turnAmount -= turn;
                 t.heading += turn;
                 return 0;

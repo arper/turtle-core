@@ -76,21 +76,36 @@ public class TLSimulator {
 
 	public void invokeAndWait(TLAction a, Turtle t) {
 	    TLAwtUtilities.assertOffAwtThread();
+
 	    try {
-	        invokeAndWaitInterruptibly(a, getTurtleState(t));
+	        invokeAndWaitInterruptibly(a, t);
 	    } catch (InterruptedException e) {
 	        throw Throwables.propagate(e);
 	    }
 	}
 
-	private void invokeAndWaitInterruptibly(TLAction a, TurtleState t) throws InterruptedException {
+	private void markDirty(Turtle t) {
+	    TLSingletonContext.get().getWindow().getCanvas().getRenderer(t).markDirty();
+	}
+
+	private float realToSimulationTime(float time) {
+	    return settings.isPaused()? 0 : time * settings.getAnimationSpeed();
+	}
+
+	private float simulationToRealTime(float time) {
+	    return settings.isPaused()? Float.MAX_VALUE : time / settings.getAnimationSpeed();
+	}
+
+	private void invokeAndWaitInterruptibly(TLAction a, Turtle t) throws InterruptedException {
         float spinEndTime = 0;
         synchronized (t) {
-            float estimatedTimeMicros = a.getCompletionTime(t)
+            float estimatedTimeMicros = a.getCompletionTime(getTurtleState(t))
                     * MICROS_IN_SECOND;
+            estimatedTimeMicros = simulationToRealTime(estimatedTimeMicros);
+
             if (estimatedTimeMicros < maxBlockingSimulationPeriodMicros) {
                 long startMicros = currentTimeMicros();
-                a.perform(t, Float.MAX_VALUE);
+                a.perform(getTurtleState(t), Float.MAX_VALUE);
                 spinEndTime = startMicros + estimatedTimeMicros;
             }
         }
@@ -99,6 +114,7 @@ public class TLSimulator {
          * simply simulate execution and return
          */
         if (spinEndTime > 0) {
+            markDirty(t);
             spin(spinEndTime);
             if (Thread.interrupted()) {
                 throw new InterruptedException();
@@ -126,40 +142,48 @@ public class TLSimulator {
 
 	private class TLActionInterpolationRunnable implements Runnable {
 
-	    public TLActionInterpolationRunnable(TLAction action, TurtleState state) {
+	    public TLActionInterpolationRunnable(TLAction action, Turtle turtle) {
             this.action = action;
-            this.state = state;
+            this.turtle = turtle;
             this.latch = new CountDownLatch(1);
 
             lastExecutionTimeMicros = currentTimeMicros();
         }
 
         private final TLAction action;
-        private final TurtleState state;
+        private final Turtle turtle;
 	    private final CountDownLatch latch;
 
         private long lastExecutionTimeMicros;
 
-        private long nextScheduledTimeMicros() {
-            long estimatedTimeMicros = (long) Math.ceil(action.getCompletionTime(state)
+        private long nextScheduleTimeMicros() {
+            long estimatedTimeMicros = (long) Math.ceil(
+                    simulationToRealTime(action.getCompletionTime(getTurtleState(turtle)))
                     * MICROS_IN_SECOND);
             return Math.min(estimatedTimeMicros, interpolationStepMicros);
         }
 
         private void schedule() {
-            actionScheduler.schedule(this, nextScheduledTimeMicros(), TimeUnit.MICROSECONDS);
+            actionScheduler.schedule(this, nextScheduleTimeMicros(), TimeUnit.MICROSECONDS);
         }
 
         @Override
         public void run() {
             long time = currentTimeMicros();
-            float elapsedSeconds = (time - lastExecutionTimeMicros) / MICROS_IN_SECOND;
-            if (action.perform(state, elapsedSeconds) > 0) {
+            float elapsedMicros = (time - lastExecutionTimeMicros);
+            if (elapsedMicros > interpolationStepMicros) {
+                elapsedMicros = interpolationStepMicros;
+            }
+
+            float elapsedSeconds = realToSimulationTime(elapsedMicros) / MICROS_IN_SECOND;
+
+            if (action.perform(getTurtleState(turtle), elapsedSeconds) > 0) {
                 latch.countDown();
             } else {
                 lastExecutionTimeMicros = time;
                 schedule();
             }
+            markDirty(turtle);
         }
 
 	}

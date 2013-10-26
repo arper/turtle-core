@@ -1,5 +1,6 @@
 package org.arper.turtle.impl;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Composite;
 import java.awt.CompositeContext;
@@ -9,16 +10,29 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.font.FontRenderContext;
 import java.awt.font.LineMetrics;
+import java.awt.geom.Path2D;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.swing.SwingConstants;
 
+import org.imgscalr.Scalr;
+import org.imgscalr.Scalr.Method;
+
 import com.google.common.base.Splitter;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class TLDisplayUtilities {
 
@@ -230,6 +244,70 @@ public class TLDisplayUtilities {
             public void dispose() {
             }
         }
+    }
+
+
+    private static final LoadingCache<Map.Entry<Integer, BufferedImage>, BufferedImage> imageCache
+        = CacheBuilder.newBuilder().concurrencyLevel(4).build(
+                new CacheLoader<Map.Entry<Integer, BufferedImage>, BufferedImage>() {
+                    @Override
+                    public BufferedImage load(Entry<Integer, BufferedImage> e)
+                            throws Exception {
+                        return Scalr.apply(Scalr.resize(e.getValue(), Method.ULTRA_QUALITY, e.getKey()), Scalr.OP_ANTIALIAS);
+                    }
+                });
+
+    public static BufferedImage getScaledImage(int size, BufferedImage im) {
+        Map.Entry<Integer, BufferedImage> key = Maps.immutableEntry(size, im);
+
+        /* Only request loading of the given image. If it isn't ready, return null
+         * and let caller deal with scaling manually, or try again.
+         */
+        imageCache.refresh(key);
+        return imageCache.getIfPresent(key);
+    }
+
+    public static void drawImage(Graphics2D g, BufferedImage image, Composite composite) {
+        if (TLDisplayUtilities.isMacOS) {
+            g.drawImage(image, 0, 0, null);
+        } else {
+            Composite oldComposite = g.getComposite();
+            g.setComposite(composite);
+            g.drawImage(image, 0, 0, null);
+            g.setComposite(oldComposite);
+        }
+    }
+
+    public static <T> List<T> sampleListUniformly(List<T> list, int count) {
+        if (count >= list.size()) {
+            return list;
+        }
+        List<T> results = Lists.newArrayListWithCapacity(count);
+
+        for (int i = 0; i < count; ++i) {
+            int sampleIndex = i * (list.size() - 1) / (count - 1);
+            results.add(list.get(sampleIndex));
+        }
+        return results;
+    }
+
+    public static void drawPath(Graphics2D g, List<Point2D.Float> points) {
+        Composite oldComposite = g.getComposite();
+        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));
+        Path2D.Float path = new Path2D.Float();
+        boolean initialMove = false;
+
+        for (Point2D.Float point : points) {
+            if (!initialMove) {
+                path.moveTo(point.x, point.y);
+                initialMove = true;
+            } else {
+                path.lineTo(point.x, point.y);
+            }
+        }
+
+        g.draw(path);
+        g.setComposite(oldComposite);
     }
 
     private TLDisplayUtilities() {

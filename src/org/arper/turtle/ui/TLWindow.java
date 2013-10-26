@@ -182,7 +182,7 @@ public class TLWindow extends JFrame {
         TLSimulationSettings settings = TLSingletonContext.get().getSimulator().getSettings();
         double val = speedSlider.getModel().getValue() * 1.0 / speedSlider.getModel().getMaximum();
         synchronized (settings) {
-            settings.setAnimationSpeed(Math.pow(36, val) / 6);
+            settings.setAnimationSpeed((float) (Math.pow(36, val) / 6));
         }
 	}
 

@@ -52,4 +52,22 @@ public class TurtleState {
         status = null;
         data = null;
     }
+
+    public void set(TurtleState other) {
+        this.location.setLocation(other.location);
+        this.movementSpeed = other.movementSpeed;
+        this.heading = other.heading;
+        this.turningSpeed = other.turningSpeed;
+        this.color = other.color;
+        this.pathType = other.pathType;
+        this.thickness = other.thickness;
+        this.isPenDown = other.isPenDown;
+
+        this.fillShape.clear();
+        this.fillShape.addAll(other.fillShape);
+        this.isFilling = other.isFilling;
+
+        this.status = other.status;
+        this.data = other.data;
+    }
 }

@@ -19,9 +19,11 @@ import javax.swing.JPanel;
 
 import org.arper.turtle.TLUtils;
 import org.arper.turtle.Turtle;
+import org.arper.turtle.impl.TLAwtUtilities;
 import org.arper.turtle.impl.TLDisplayUtilities;
 import org.arper.turtle.impl.TLRenderer;
 import org.arper.turtle.impl.TLSingletonContext;
+import org.arper.turtle.impl.TLTurtleRenderer;
 import org.arper.turtle.impl.TurtleLogging;
 
 import com.google.common.base.Throwables;
@@ -51,7 +53,7 @@ public class TLCanvas extends JPanel {
             .build(new CacheLoader<Turtle, TLRenderer>() {
                 @Override
                 public TLRenderer load(Turtle key) throws Exception {
-                    return new TLRenderer(key);
+                    return new TLTurtleRenderer(key);
                 }
             });
 
@@ -109,22 +111,29 @@ public class TLCanvas extends JPanel {
 
     @Override
 	public void paintComponent(Graphics g) {
+        TLAwtUtilities.assertOnAwtThread();
+
 		super.paintComponent(g);
+        List<Turtle> turtles = TLSingletonContext.get().getTurtles();
+
 		Graphics2D g2 = (Graphics2D) g;
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g2.scale(zoom, zoom);
+
 		if (backBuffer != null) {
+		    Graphics2D canvasGraphics = getCanvasGraphics();
+		    for (Turtle turtle : turtles) {
+		        getRenderer(turtle).preRender(canvasGraphics);
+		    }
 			g.drawImage(backBuffer, 0, 0, null);
 		}
 
         g2.translate(drawableWidth / 2, drawableHeight / 2);
-        List<Turtle> turtles = TLSingletonContext.get().getTurtles();
         synchronized (turtles) {
             for (Turtle turtle : turtles) {
-                getRenderer(turtle).screenRender(g2);
+                getRenderer(turtle).render(g2);
             }
         }
-        /* TODO: render turtle renderables */
 	}
 
 	private static Rectangle getRectangleContaining(Point2D p1, Point2D p2) {
