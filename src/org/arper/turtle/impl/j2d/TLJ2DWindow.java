@@ -92,12 +92,12 @@ public class TLJ2DWindow extends WebFrame implements TLWindow {
 	public TLJ2DWindow(int canvasWidth, int canvasHeight) {
 	    canvas = new TLJ2DCanvas(canvasWidth, canvasHeight, 5);
 	    pauseOverlay = createPauseOverlay();
-	    layoutComponents(createToolbar(), pauseOverlay, 
+	    layoutComponents(createToolbar(), pauseOverlay,
 	            canvas, createConsoleComponent());
-	    
+
         setWindowIcon("icons/turtle.png");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        
+
         pack();
         refreshPlayPauseDisplay();
 	}
@@ -106,8 +106,8 @@ public class TLJ2DWindow extends WebFrame implements TLWindow {
 		this(Toolkit.getDefaultToolkit().getScreenSize().width / 4,
 				Toolkit.getDefaultToolkit().getScreenSize().height / 4);
 	}
-	
-	private void layoutComponents(JComponent tools, JComponent pauseOverlay, 
+
+	private void layoutComponents(JComponent tools, JComponent pauseOverlay,
 	        JComponent canvas, JComponent consoleComponent) {
 	    /* Overlay */
         JPanel overlay = transparent(new WebPanel(new BorderLayout()));
@@ -116,7 +116,7 @@ public class TLJ2DWindow extends WebFrame implements TLWindow {
 
         /* Console */
         consoleComponent.setPreferredSize(new Dimension(400, 300));
-        
+
         WebCollapsiblePane consoleFlyout = transparent(new WebCollapsiblePane ());
         consoleFlyout.setContent(consoleComponent);
         consoleFlyout.setContentMargin(0);
@@ -128,11 +128,11 @@ public class TLJ2DWindow extends WebFrame implements TLWindow {
         consoleFlyout.getExpandButton().setFontSize(13);
         consoleFlyout.getExpandButton().setFontName("Lucida");
         consoleFlyout.getExpandButton().setForeground(Color.white);
-        
+
         consoleFlyout.getHeaderPanel().setUndecorated(true);
         consoleFlyout.setExpanded(false, false);
         TLJ2DStyles.setUndecorated(consoleFlyout);
-        
+
         /* Canvas */
 	    JScrollPane canvasPane = transparent(new WebScrollPane(canvas, false, false));
 
@@ -142,10 +142,10 @@ public class TLJ2DWindow extends WebFrame implements TLWindow {
 	    layeredContainer.add(anchored(pad(consoleFlyout, 4), BorderLayout.SOUTH, BorderLayout.WEST));
 	    layeredContainer.add(overlay);
 	    layeredContainer.add(canvasPane);
-	    
+
 	    getContentPane().add(layeredContainer);
 	}
-	
+
 	private JComponent anchored(JComponent comp, String... direction) {
 	    JComponent parent = comp;
 	    for (String dir : direction) {
@@ -156,15 +156,15 @@ public class TLJ2DWindow extends WebFrame implements TLWindow {
 	    }
 	    return parent;
 	}
-	
+
 	private JComponent createConsoleComponent() {
 	    WebTextPane textPane = transparent(new WebTextPane());
 	    WebTextField textField = transparent(new WebTextField());
         textField.setBackground(new Color(0, 0, 0, 128));
         textField.setForeground(Color.white);
-	    
+
 	    console = TLJ2DConsoleImpl.create(textField, textPane);
-	    
+
 	    WebPanel comp = new WebPanel(new BorderLayout()) {
 	        @Override
 	        public void paintComponent(Graphics g) {
@@ -182,20 +182,20 @@ public class TLJ2DWindow extends WebFrame implements TLWindow {
 	private <T extends JComponent> T transparent(T comp) {
 	    comp.setBackground(new Color(0, 0, 0, 0));
 	    comp.setOpaque(false);
-	    
+
 	    if (comp instanceof JScrollPane) {
 	        ((JScrollPane)comp).setViewportBorder(BorderFactory.createEmptyBorder());
 	        ((JScrollPane)comp).getViewport().setOpaque(false);
 	    }
 	    return comp;
 	}
-	
+
 	private void swapIcons(WebCollapsiblePane pane) {
 	    ImageIcon collapsed = pane.getCollapseIcon();
 	    pane.setCollapseIcon(pane.getExpandIcon());
 	    pane.setExpandIcon(collapsed);
 	}
-	
+
     private JComponent createPauseOverlay() {
         try {
             ImageIcon icon = new ImageIcon(ImageIO.read(ClassLoader.getSystemResource("icons/pause2.png")));
@@ -228,7 +228,7 @@ public class TLJ2DWindow extends WebFrame implements TLWindow {
             return l;
         }
     }
-    
+
     private JComponent pad(JComponent comp, int padding) {
         JComponent parent = new JPanel(new BorderLayout());
         parent.setOpaque(comp.isOpaque());
@@ -239,7 +239,7 @@ public class TLJ2DWindow extends WebFrame implements TLWindow {
 
     private JComponent createToolbar() {
         WebPanel tools = transparent(new WebPanel(false));
-        
+
         tools.setLayout(new BoxLayout(tools, BoxLayout.X_AXIS));
 
         playButton = createToolbarButton(null, "\u25B8", "Play/Pause", Hotkey.P);
@@ -295,7 +295,7 @@ public class TLJ2DWindow extends WebFrame implements TLWindow {
         });
         tools.add(restartButton);
 
-        helpButton = createToolbarButton("icons/help.png", "Help",
+        helpButton = createToolbarButton("icons/help2.png", "Help",
                 "Help - Go to Online Documentation (http://stanford.edu/~alexryan/cgi-bin/turtledoc/)",
                 Hotkey.F1);
         helpButton.addActionListener(new ActionListener() {
@@ -315,7 +315,7 @@ public class TLJ2DWindow extends WebFrame implements TLWindow {
         tools.add(Box.createHorizontalGlue());
         tools.add(updateButton);
         tools.add(helpButton);
-        
+
         return tools;
     }
 
@@ -335,7 +335,7 @@ public class TLJ2DWindow extends WebFrame implements TLWindow {
         b.setMaximumSize(new Dimension(45, 45));
         return b;
     }
-    
+
 	private void setWindowIcon(String path) {
         try {
             setIconImage(ImageIO.read(ClassLoader.getSystemResource(path)));
@@ -459,15 +459,15 @@ public class TLJ2DWindow extends WebFrame implements TLWindow {
 	        e.printStackTrace();
 	    }
 	}
-    
+
     @Override
     public TLCanvas getCanvas() {
         return canvas;
     }
-    
+
     @Override
     public TLConsole getConsole() {
         return console;
     }
-    
+
 }
