@@ -1,5 +1,6 @@
-package org.arper.turtle.impl;
+package org.arper.turtle.impl.j2d;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -19,11 +20,21 @@ public class TLAwtUtilities {
         }
     }
 
-    public static void runOnAwtThread(Runnable r) {
+    public static void runOnAwtThread(Runnable r, boolean block) {
         if (SwingUtilities.isEventDispatchThread()) {
             r.run();
         } else {
-            SwingUtilities.invokeLater(r);
+            if (block) {
+                try {
+                    SwingUtilities.invokeAndWait(r);
+                } catch (InvocationTargetException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                SwingUtilities.invokeLater(r);
+            }
         }
     }
 

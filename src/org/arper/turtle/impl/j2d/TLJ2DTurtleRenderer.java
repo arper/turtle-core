@@ -1,4 +1,4 @@
-package org.arper.turtle.impl.display;
+package org.arper.turtle.impl.j2d;
 
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
@@ -15,7 +15,7 @@ import java.util.List;
 
 import org.arper.turtle.TLPathType;
 import org.arper.turtle.TLTurtle;
-import org.arper.turtle.impl.TLAwtUtilities;
+import org.arper.turtle.impl.TLAnimation;
 import org.arper.turtle.impl.TLDefaultTurtleAnimation;
 import org.arper.turtle.impl.TLRenderer;
 import org.arper.turtle.impl.TLSingletonContext;
@@ -57,7 +57,7 @@ public class TLJ2DTurtleRenderer implements TLRenderer {
 
         /* turtleComposite */
         if (noState || !Objects.equal(newState.color, renderedState.color)) {
-            turtleComposite = new TLJ2DUtilities.MultiplyColorComposite(newState.color, 0.4f);
+            turtleComposite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.9f); // = new TLJ2DUtilities.MultiplyColorComposite(newState.color, 0.4f);
         }
 
         /* statusBubble */
@@ -233,7 +233,7 @@ public class TLJ2DTurtleRenderer implements TLRenderer {
             double tY = turtleAnimation.getBoundingHeight() * turtleAnimation.getCenterY(i);
             double rotateAmount = newState.heading + turtleAnimation.getPieceRotation(i, elapsed);
             g.rotate(rotateAmount);
-
+//
             BufferedImage pretty = TLJ2DUtilities.getScaledImage((int) Math.ceil(size), images[i]);
             if (pretty != null) {
                 g.translate(-turtleAnimation.getCenterX(i) * pretty.getWidth(),
@@ -243,7 +243,7 @@ public class TLJ2DTurtleRenderer implements TLRenderer {
                 g.translate(-tX, -tY);
             }
             TLJ2DUtilities.drawImage(g, pretty, turtleComposite);
-
+//
             g.setTransform(at2);
         }
 

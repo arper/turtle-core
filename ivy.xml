@@ -3,5 +3,6 @@
     <dependencies>
         <dependency org="org.imgscalr" name="imgscalr-lib" rev="4.2" />
         <dependency org="com.google.guava" name="guava" rev="+" />
+        <dependency org="org.swinglabs" name="jxlayer" rev="3.0.4" />
     </dependencies>
 </ivy-module>

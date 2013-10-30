@@ -6,17 +6,29 @@ import org.arper.turtle.config.TLApplicationConfig;
 import org.arper.turtle.controller.TLController;
 import org.arper.turtle.controller.TLObjective;
 import org.arper.turtle.impl.TLContext;
+import org.arper.turtle.impl.j2d.TLAwtUtilities;
+import org.arper.turtle.ui.TLConsole;
 
 import com.google.common.base.Preconditions;
 
 
 public final class TLApplication {
 
-    public static void runObjectiveAsApplication(TLObjective objective, Object... args) {
-        new TLApplication(TLApplicationConfig.DEFAULT)
-            .startObjectiveWithNewTurtles(objective, args);
-    }
+    public static TLApplication runObjectiveAsApplication(final TLObjective objective, Object... args) {
+        final TLApplication app = new TLApplication(TLApplicationConfig.DEFAULT);
+        
+        TLAwtUtilities.runOnAwtThread(new Runnable() {
+            @Override
+            public void run() {
+                app.context.getWindow().setTitle(objective.getClass().getSimpleName());
+                app.context.getWindow().setVisible(true);
+            }        
+        }, false);
 
+        app.startObjectiveWithNewTurtles(objective, args);
+        return app;
+    }
+    
     public TLApplication(String configFileName) {
         /* TODO: TLApplication constructor */
         throw new UnsupportedOperationException("not yet implemented");
@@ -30,13 +42,15 @@ public final class TLApplication {
     public TLApplication(TLApplicationConfig config) {
         Preconditions.checkNotNull(config, "TLApplication must have non-null TLApplicationConfig.");
         this.config = config;
-        this.context = new TLContext(config);
-
-        context.getWindow().setVisible(true);
+        this.context = TLContext.create(config);
+        
+        console = context.getWindow().getConsole();
     }
 
     private final TLApplicationConfig config;
     private final TLContext context;
+    
+    public final TLConsole console;
 
     public TLApplicationConfig getConfig() {
         return config;

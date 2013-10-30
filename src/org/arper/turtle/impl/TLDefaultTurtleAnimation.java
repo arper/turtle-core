@@ -7,7 +7,6 @@ import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
 
 import org.arper.turtle.TLTurtle;
-import org.arper.turtle.impl.display.TLAnimation;
 import org.imgscalr.Scalr;
 import org.imgscalr.Scalr.Method;
 
@@ -16,7 +15,7 @@ public class TLDefaultTurtleAnimation implements TLAnimation {
 
 	protected static final int PREFERRED_SIZE = 128;
 	private static final BufferedImage[] defaultImages;
-	private static final String[] DEFAULT_PIECES = {"body.png", "lflipper.png", "rflipper.png", "lfoot.png", "rfoot.png"};
+	private static final String[] DEFAULT_PIECES = {"turtle-sexy.png", "lflipper.png", "rflipper.png", "lfoot.png", "rfoot.png"};
 	private static final int BODY_IMAGE = 0, LFLIPPER_IMAGE = 1, RFLIPPER_IMAGE = 2, LFOOT_IMAGE = 3, RFOOT_IMAGE = 4;
 	private static int defaultImageWidth, defaultImageHeight;
 

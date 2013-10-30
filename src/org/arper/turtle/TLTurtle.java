@@ -11,8 +11,8 @@ import org.arper.turtle.impl.TLRenderer;
 import org.arper.turtle.impl.TLSimulator;
 import org.arper.turtle.impl.TLSingletonContext;
 import org.arper.turtle.impl.TLTurtleState;
+import org.arper.turtle.impl.j2d.TLJ2DWindow;
 import org.arper.turtle.ui.TLCanvas;
-import org.arper.turtle.ui.TLWindow;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -106,7 +106,7 @@ import com.google.common.collect.Lists;
  * You may wish to change other properties about the simulation itself, such
  * as the background color of the canvas or the title of the window. Take a look at
  * the {@link #getCanvas()} and {@link #getWindow()} methods to access the
- * active {@link TLCanvas} or {@link TLWindow}, respectively. More information
+ * active {@link TLCanvas} or {@link TLJ2DWindow}, respectively. More information
  * about each is available on their documentation pages.
  *
  * @author Alex Ryan

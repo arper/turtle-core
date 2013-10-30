@@ -5,13 +5,19 @@ import java.util.List;
 import org.arper.turtle.TLTurtle;
 import org.arper.turtle.config.TLAnglePolicy;
 import org.arper.turtle.config.TLApplicationConfig;
+import org.arper.turtle.impl.j2d.TLAwtUtilities;
+import org.arper.turtle.impl.j2d.TLJ2DWindow;
 import org.arper.turtle.ui.TLWindow;
 
 import com.google.common.collect.Lists;
 
 public class TLContext {
 
-    public TLContext(TLApplicationConfig config) {
+    public static TLContext create(TLApplicationConfig config) {
+        return new TLContext(config);
+    }
+    
+    private TLContext(final TLApplicationConfig config) {
         TLSingletonContext.set(this);
 
         this.anglePolicy = config.getAnglePolicy();
@@ -22,11 +28,17 @@ public class TLContext {
 
         this.turtles = Lists.newArrayList();
         this.runningControllers = Lists.newArrayList();
-        this.window = new TLWindow(config.getCanvasWidth(), config.getCanvasHeight());
+        
+        TLAwtUtilities.runOnAwtThread(new Runnable() {
+            @Override
+            public void run() {
+                window = new TLJ2DWindow(config.getCanvasWidth(), config.getCanvasHeight());
+            }
+        }, true);
     }
-
+    
     private final TLAnglePolicy anglePolicy;
-    private final TLWindow window;
+    private TLWindow window;
     private final TLSimulator simulator;
     private final List<TLTurtle> turtles;
     private final List<Thread> runningControllers;
@@ -52,7 +64,7 @@ public class TLContext {
     public TLWindow getWindow() {
         return window;
     }
-
+    
     public TLSimulator getSimulator() {
         return simulator;
     }

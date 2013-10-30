@@ -1,4 +1,4 @@
-package org.arper.turtle.impl.display;
+package org.arper.turtle.impl.j2d;
 
 import java.awt.AlphaComposite;
 import java.awt.Color;
@@ -271,7 +271,7 @@ public class TLJ2DUtilities {
     }
 
     public static void drawImage(Graphics2D g, BufferedImage image, Composite composite) {
-        if (TLJ2DUtilities.isMacOS) {
+        if (TLJ2DUtilities.isMacOS || composite == null) {
             g.drawImage(image, 0, 0, null);
         } else {
             Composite oldComposite = g.getComposite();

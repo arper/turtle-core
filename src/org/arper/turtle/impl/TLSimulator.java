@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.arper.turtle.TLSimulationSettings;
 import org.arper.turtle.TLTurtle;
+import org.arper.turtle.impl.j2d.TLAwtUtilities;
 
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
@@ -160,10 +161,11 @@ public class TLSimulator {
         private long lastExecutionTimeMicros;
 
         private long nextScheduleTimeMicros() {
-            long estimatedTimeMicros = (long) Math.ceil(
-                    simulationToRealTime(action.getCompletionTime(getTurtleState(turtle)))
-                    * MICROS_IN_SECOND);
-            return Math.min(estimatedTimeMicros, interpolationStepMicros);
+//            long estimatedTimeMicros = (long) Math.ceil(
+//                    simulationToRealTime(action.getCompletionTime(getTurtleState(turtle)))
+//                    * MICROS_IN_SECOND);
+//            return Math.min(estimatedTimeMicros, interpolationStepMicros);
+            return interpolationStepMicros;
         }
 
         private void schedule() {
@@ -186,7 +188,10 @@ public class TLSimulator {
                 lastExecutionTimeMicros = time;
                 schedule();
             }
-            markDirty(turtle);
+            
+            if (!settings.isPaused()) {
+                markDirty(turtle);
+            }
         }
 
 	}
