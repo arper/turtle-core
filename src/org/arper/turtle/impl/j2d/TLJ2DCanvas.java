@@ -1,7 +1,9 @@
 package org.arper.turtle.impl.j2d;
 
+import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Composite;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -137,6 +139,7 @@ public class TLJ2DCanvas extends JPanel implements TLCanvas {
         AffineTransform t = bufferGraphics.getTransform();
         bufferGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         bufferGraphics.scale(zoom, zoom);
+//        drawBorder(bufferGraphics);
 
         Graphics2D drawingGraphics = getDrawingGraphics();
         drawingGraphics.translate(padding + drawableWidth / 2, padding + drawableHeight / 2);
@@ -147,7 +150,6 @@ public class TLJ2DCanvas extends JPanel implements TLCanvas {
             drawingGraphics.dispose();
             bufferGraphics.drawImage(drawing, 0, 0, null);
 //            
-            drawBorder(bufferGraphics);
 //
             bufferGraphics.translate(padding + drawableWidth / 2, padding + drawableHeight / 2);
             for (TLTurtle turtle : turtles) {
@@ -161,10 +163,14 @@ public class TLJ2DCanvas extends JPanel implements TLCanvas {
     
     private void drawBorder(Graphics2D g) {
         Stroke s = g.getStroke();
-        
-        g.setStroke(BORDER_STROKE);
-        g.setColor(Color.GRAY);
-        g.drawRect(padding, padding, drawableWidth, drawableHeight);
+        Composite composite = g.getComposite();
+//        g.setStroke(BORDER_STROKE);
+//        g.setColor(Color.GRAY);
+//        g.fillRect(0, 0, getWidth(), getHeight());
+        g.setColor(Color.WHITE);
+        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.3f));
+        g.fillRect(padding, padding, drawableWidth, drawableHeight);
+        g.setComposite(composite);
         
         g.setStroke(s);
     }

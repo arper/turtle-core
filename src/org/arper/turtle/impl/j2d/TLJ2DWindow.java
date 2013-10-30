@@ -94,7 +94,7 @@ public class TLJ2DWindow extends WebFrame implements TLWindow {
 	    pauseOverlay = createPauseOverlay();
 	    layoutComponents(createToolbar(), pauseOverlay,
 	            canvas, createConsoleComponent());
-
+	    
         setWindowIcon("icons/turtle.png");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -117,7 +117,7 @@ public class TLJ2DWindow extends WebFrame implements TLWindow {
         /* Console */
         consoleComponent.setPreferredSize(new Dimension(400, 300));
 
-        WebCollapsiblePane consoleFlyout = transparent(new WebCollapsiblePane ());
+        WebCollapsiblePane consoleFlyout = new WebCollapsiblePane();
         consoleFlyout.setContent(consoleComponent);
         consoleFlyout.setContentMargin(0);
         consoleFlyout.setTitlePanePostion (SwingConstants.TOP);
@@ -158,7 +158,15 @@ public class TLJ2DWindow extends WebFrame implements TLWindow {
 	}
 
 	private JComponent createConsoleComponent() {
-	    WebTextPane textPane = transparent(new WebTextPane());
+	    WebTextPane textPane = transparent(new WebTextPane() {
+	        @Override
+	        public void paintComponent(Graphics g) {
+	            g.setColor(getBackground());
+	            g.fillRect(getX(), getY(), getWidth(), getHeight());
+	            super.paintComponent(g);
+	        }
+	    });
+	    textPane.setBackground(new Color(0, 0, 0, 192));
 	    WebTextField textField = transparent(new WebTextField());
         textField.setBackground(new Color(0, 0, 0, 128));
         textField.setForeground(Color.white);
