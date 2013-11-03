@@ -5,8 +5,8 @@ import java.util.List;
 import org.arper.turtle.TLTurtle;
 import org.arper.turtle.config.TLAnglePolicy;
 import org.arper.turtle.config.TLApplicationConfig;
-import org.arper.turtle.impl.j2d.TLAwtUtilities;
-import org.arper.turtle.impl.j2d.TLJ2DWindow;
+import org.arper.turtle.impl.swing.TLSwingUtilities;
+import org.arper.turtle.impl.swing.TLSwingWindow;
 import org.arper.turtle.ui.TLWindow;
 
 import com.google.common.collect.Lists;
@@ -16,10 +16,8 @@ public class TLContext {
     public static TLContext create(TLApplicationConfig config) {
         return new TLContext(config);
     }
-    
-    private TLContext(final TLApplicationConfig config) {
-        TLSingletonContext.set(this);
 
+    private TLContext(final TLApplicationConfig config) {
         this.anglePolicy = config.getAnglePolicy();
         this.simulator = new TLSimulator(config.getSimulationCores(),
                 config.getSimulationStepMicros(),
@@ -28,15 +26,17 @@ public class TLContext {
 
         this.turtles = Lists.newArrayList();
         this.runningControllers = Lists.newArrayList();
-        
-        TLAwtUtilities.runOnAwtThread(new Runnable() {
+
+        TLSwingUtilities.runOnAwtThread(new Runnable() {
             @Override
             public void run() {
-                window = new TLJ2DWindow(config.getCanvasWidth(), config.getCanvasHeight());
+                window = new TLSwingWindow(config.getCanvasWidth(),
+                        config.getCanvasHeight(),
+                        TLSwingWindow.DEFAULT_PLUGINS);
             }
         }, true);
     }
-    
+
     private final TLAnglePolicy anglePolicy;
     private TLWindow window;
     private final TLSimulator simulator;
@@ -64,7 +64,7 @@ public class TLContext {
     public TLWindow getWindow() {
         return window;
     }
-    
+
     public TLSimulator getSimulator() {
         return simulator;
     }

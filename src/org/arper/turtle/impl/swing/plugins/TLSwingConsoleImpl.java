@@ -1,4 +1,4 @@
-package org.arper.turtle.impl.j2d;
+package org.arper.turtle.impl.swing.plugins;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -20,22 +20,32 @@ import javax.swing.text.JTextComponent;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 
-import org.arper.turtle.ui.TLConsole;
+import org.arper.turtle.impl.swing.TLSwingUtilities;
 
-public class TLJ2DConsoleImpl {
-    
-    public static TLConsole create(JTextField textField, JTextComponent textPane) {
-        TLJ2DConsoleImpl impl = new TLJ2DConsoleImpl(textField, textPane);
-        return new TLConsole(impl.in, new PrintStream(impl.out, true));
+public class TLSwingConsoleImpl {
+
+    public static class StreamPair {
+        public final PrintStream out;
+        public final InputStream in;
+
+        public StreamPair(PrintStream out, InputStream in) {
+            this.out = out;
+            this.in = in;
+        }
     }
-    
+
+    public static StreamPair create(JTextField textField, JTextComponent textPane) {
+        TLSwingConsoleImpl impl = new TLSwingConsoleImpl(textField, textPane);
+        return new StreamPair(new PrintStream(impl.out, true), impl.in);
+    }
+
     private final JTextComponent textPane;
     private final JTextField inputTextField;
 
-    public TLJ2DConsoleImpl(JTextField textField, JTextComponent textPane) {
+    public TLSwingConsoleImpl(JTextField textField, JTextComponent textPane) {
         this.textPane = textPane;
         this.inputTextField = textField;
-        
+
         textPane.setEditable(false);
         textPane.setFont(new Font("Lucida Console", Font.PLAIN, 13));
         ((DefaultCaret)textPane.getCaret()).setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
@@ -63,7 +73,7 @@ public class TLJ2DConsoleImpl {
     }
 
     private void doPrint(final String text, final AttributeSet settings) {
-        TLAwtUtilities.runOnAwtThread(new Runnable() {
+        TLSwingUtilities.runOnAwtThread(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -72,21 +82,21 @@ public class TLJ2DConsoleImpl {
                 } catch (BadLocationException e) {
                     e.printStackTrace();
                 }
-//                BoundedRangeModel brm = textScrollPane.getVerticalScrollBar().getModel();
-//                boolean atBottom = brm.getValue() + brm.getExtent() >= brm.getMaximum() - 5;
-//                try {
-//                    textPane.getDocument().insertString(textPane.getDocument().getLength(),
-//                            text, settings);
-//                } catch (BadLocationException e1) {
-//                    e1.printStackTrace();
-//                }
-//                if (atBottom) {
-//                    textPane.setCaretPosition(textPane.getDocument().getLength());
-//                    brm.setValue(brm.getMaximum() - brm.getExtent());
-//                    Rectangle v = textPane.getVisibleRect();
-//                    v.y = textPane.getHeight() - v.height;
-//                    textPane.scrollRectToVisible(v);
-//                }
+                //                BoundedRangeModel brm = textScrollPane.getVerticalScrollBar().getModel();
+                //                boolean atBottom = brm.getValue() + brm.getExtent() >= brm.getMaximum() - 5;
+                //                try {
+                //                    textPane.getDocument().insertString(textPane.getDocument().getLength(),
+                //                            text, settings);
+                //                } catch (BadLocationException e1) {
+                //                    e1.printStackTrace();
+                //                }
+                //                if (atBottom) {
+                //                    textPane.setCaretPosition(textPane.getDocument().getLength());
+                //                    brm.setValue(brm.getMaximum() - brm.getExtent());
+                //                    Rectangle v = textPane.getVisibleRect();
+                //                    v.y = textPane.getHeight() - v.height;
+                //                    textPane.scrollRectToVisible(v);
+                //                }
             }
         }, false);
     }
@@ -164,5 +174,4 @@ public class TLJ2DConsoleImpl {
         OUTPUT_TEXT_ATTR = new SimpleAttributeSet();
         StyleConstants.setForeground(OUTPUT_TEXT_ATTR, Color.BLUE);
     }
-
 }

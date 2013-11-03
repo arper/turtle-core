@@ -1,7 +1,6 @@
 package org.arper.turtle.impl.j2d;
 
 import java.awt.AlphaComposite;
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Composite;
 import java.awt.Dimension;
@@ -11,11 +10,12 @@ import java.awt.Graphics2D;
 import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
-import java.awt.Stroke;
+import java.awt.Shape;
 import java.awt.Transparency;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Area;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.List;
@@ -29,7 +29,8 @@ import org.arper.turtle.TLTurtle;
 import org.arper.turtle.TLUtils;
 import org.arper.turtle.impl.TLLogging;
 import org.arper.turtle.impl.TLRenderer;
-import org.arper.turtle.impl.TLSingletonContext;
+import org.arper.turtle.impl.TLSingleton;
+import org.arper.turtle.impl.swing.TLSwingUtilities;
 import org.arper.turtle.ui.TLCanvas;
 
 import com.google.common.base.Throwables;
@@ -40,10 +41,7 @@ import com.google.common.cache.LoadingCache;
 
 @SuppressWarnings("serial")
 public class TLJ2DCanvas extends JPanel implements TLCanvas {
-    
-    private static final Stroke BORDER_STROKE = new BasicStroke(1.0f, BasicStroke.CAP_ROUND,
-            BasicStroke.JOIN_MITER, 5.0f, new float[]{4.0f, 7.0f, 2.0f, 7.0f}, 0.0f);
-    
+
     public TLJ2DCanvas(int width, int height, int padding) {
         this.drawableWidth = width;
         this.drawableHeight = height;
@@ -72,7 +70,7 @@ public class TLJ2DCanvas extends JPanel implements TLCanvas {
             }
         }).start();
     }
-    
+
     private BufferedImage drawing;
     private final int drawableWidth, drawableHeight;
     private float zoom;
@@ -97,7 +95,7 @@ public class TLJ2DCanvas extends JPanel implements TLCanvas {
 
     @Override
     public Dimension getPreferredSize() {
-        return new Dimension(2 * padding + Math.round(drawableWidth * zoom), 
+        return new Dimension(2 * padding + Math.round(drawableWidth * zoom),
                 2 * padding + Math.round(drawableHeight * zoom));
     }
 
@@ -131,15 +129,15 @@ public class TLJ2DCanvas extends JPanel implements TLCanvas {
     }
 
     private void render(Graphics g) {
-        TLAwtUtilities.assertOnAwtThread();
+        TLSwingUtilities.assertOnAwtThread();
 
-        List<TLTurtle> turtles = TLSingletonContext.get().getTurtles();
+        List<TLTurtle> turtles = TLSingleton.getContext().getTurtles();
 
         Graphics2D bufferGraphics = (Graphics2D) g;
         AffineTransform t = bufferGraphics.getTransform();
         bufferGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         bufferGraphics.scale(zoom, zoom);
-//        drawBorder(bufferGraphics);
+        drawBorder(bufferGraphics);
 
         Graphics2D drawingGraphics = getDrawingGraphics();
         drawingGraphics.translate(padding + drawableWidth / 2, padding + drawableHeight / 2);
@@ -149,34 +147,32 @@ public class TLJ2DCanvas extends JPanel implements TLCanvas {
             }
             drawingGraphics.dispose();
             bufferGraphics.drawImage(drawing, 0, 0, null);
-//            
+//
 //
             bufferGraphics.translate(padding + drawableWidth / 2, padding + drawableHeight / 2);
             for (TLTurtle turtle : turtles) {
                 getRenderer(turtle).render(bufferGraphics);
             }
-            
+
         }
-        
+
         bufferGraphics.setTransform(t);
     }
-    
+
     private void drawBorder(Graphics2D g) {
-        Stroke s = g.getStroke();
+        Area s = new Area(new Rectangle(0, 0, getWidth(), getHeight()));
+        s.subtract(new Area(new Rectangle(padding, padding, drawableWidth, drawableHeight)));
+
+        g.setColor(TLUtils.getColorByName("brown"));
         Composite composite = g.getComposite();
-//        g.setStroke(BORDER_STROKE);
-//        g.setColor(Color.GRAY);
-//        g.fillRect(0, 0, getWidth(), getHeight());
-        g.setColor(Color.WHITE);
         g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.3f));
-        g.fillRect(padding, padding, drawableWidth, drawableHeight);
+
+        g.fill(s);
         g.setComposite(composite);
-        
-        g.setStroke(s);
     }
 
     private void updateClip(Rectangle newClip) {
-        TLAwtUtilities.assertOnAwtThread();
+        TLSwingUtilities.assertOnAwtThread();
         if (clip.isEmpty()) {
             clip.setBounds(newClip);
         } else if (!newClip.isEmpty()) {
@@ -189,7 +185,7 @@ public class TLJ2DCanvas extends JPanel implements TLCanvas {
         render(g);
         clip.setBounds(0, 0, 0, 0);
     }
-    
+
     private static Rectangle getRectangleContaining(Point2D p1, Point2D p2) {
         double xMin = Math.min(p1.getX(), p2.getX());
         double xMax = Math.max(p1.getX(), p2.getX());

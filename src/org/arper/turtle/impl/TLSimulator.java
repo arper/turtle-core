@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.arper.turtle.TLSimulationSettings;
 import org.arper.turtle.TLTurtle;
-import org.arper.turtle.impl.j2d.TLAwtUtilities;
+import org.arper.turtle.impl.swing.TLSwingUtilities;
 
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
@@ -79,7 +79,7 @@ public class TLSimulator {
 	}
 
 	public void invokeAndWait(TLAction a, TLTurtle t) {
-	    TLAwtUtilities.assertOffAwtThread();
+	    TLSwingUtilities.assertOffAwtThread();
 
 	    try {
 	        invokeAndWaitInterruptibly(a, t);
@@ -89,7 +89,8 @@ public class TLSimulator {
 	}
 
 	private void markDirty(TLTurtle t) {
-	    TLSingletonContext.get().getWindow().getCanvas().getRenderer(t).markDirty();
+	    /* TODO: gross lack of modularization */
+	    TLSingleton.getContext().getWindow().getCanvas().getRenderer(t).markDirty();
 	}
 
 	private float realToSimulationTime(float time) {
@@ -188,7 +189,7 @@ public class TLSimulator {
                 lastExecutionTimeMicros = time;
                 schedule();
             }
-            
+
             if (!settings.isPaused()) {
                 markDirty(turtle);
             }

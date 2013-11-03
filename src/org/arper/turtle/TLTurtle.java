@@ -9,9 +9,9 @@ import org.arper.turtle.impl.TLAction;
 import org.arper.turtle.impl.TLActions;
 import org.arper.turtle.impl.TLRenderer;
 import org.arper.turtle.impl.TLSimulator;
-import org.arper.turtle.impl.TLSingletonContext;
+import org.arper.turtle.impl.TLSingleton;
 import org.arper.turtle.impl.TLTurtleState;
-import org.arper.turtle.impl.j2d.TLJ2DWindow;
+import org.arper.turtle.impl.swing.TLSwingWindow;
 import org.arper.turtle.ui.TLCanvas;
 
 import com.google.common.base.Preconditions;
@@ -106,7 +106,7 @@ import com.google.common.collect.Lists;
  * You may wish to change other properties about the simulation itself, such
  * as the background color of the canvas or the title of the window. Take a look at
  * the {@link #getCanvas()} and {@link #getWindow()} methods to access the
- * active {@link TLCanvas} or {@link TLJ2DWindow}, respectively. More information
+ * active {@link TLCanvas} or {@link TLSwingWindow}, respectively. More information
  * about each is available on their documentation pages.
  *
  * @author Alex Ryan
@@ -136,15 +136,15 @@ public class TLTurtle {
 	}
 
 	protected TLTurtleState state() {
-	    return TLSingletonContext.get().getSimulator().getTurtleState(this);
+	    return TLSingleton.getContext().getSimulator().getTurtleState(this);
 	}
 
 	protected TLRenderer renderer() {
-	    return TLSingletonContext.get().getWindow().getCanvas().getRenderer(this);
+	    return TLSingleton.getContext().getWindow().getCanvas().getRenderer(this);
 	}
 
 	protected void invoke(TLAction action) {
-	    TLSingletonContext.get().getSimulator().invokeAndWait(action, this);
+	    TLSingleton.getContext().getSimulator().invokeAndWait(action, this);
 	}
 
 	/*--------------------------------------------------------------*/
@@ -403,7 +403,7 @@ public class TLTurtle {
 
 	/* Helper method to convert 'angle' interpreted under our anglePolicy to radians. */
 	private static double clientAngleToRadians(double angle) {
-		switch (TLSingletonContext.get().getAnglePolicy()) {
+		switch (TLSingleton.getContext().getAnglePolicy()) {
 		case Radians: 	return angle;
 		case Degrees: 	return angle * Math.PI / 180;
 		default: 		return 0; // unreachable
@@ -412,7 +412,7 @@ public class TLTurtle {
 
 	/* Helper method to convert 'angle' from radians to the client's anglePolicy. */
 	private static double radiansToClientAngle(double angle) {
-		switch (TLSingletonContext.get().getAnglePolicy()) {
+		switch (TLSingleton.getContext().getAnglePolicy()) {
 		case Radians: 	return angle;
 		case Degrees:	return angle * 180 / Math.PI;
 		default:		return 0; // unreachable

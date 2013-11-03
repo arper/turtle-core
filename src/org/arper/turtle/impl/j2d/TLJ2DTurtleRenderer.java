@@ -18,8 +18,9 @@ import org.arper.turtle.TLTurtle;
 import org.arper.turtle.impl.TLAnimation;
 import org.arper.turtle.impl.TLDefaultTurtleAnimation;
 import org.arper.turtle.impl.TLRenderer;
-import org.arper.turtle.impl.TLSingletonContext;
+import org.arper.turtle.impl.TLSingleton;
 import org.arper.turtle.impl.TLTurtleState;
+import org.arper.turtle.impl.swing.TLSwingUtilities;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -123,7 +124,7 @@ public class TLJ2DTurtleRenderer implements TLRenderer {
 
     @Override
     public void markDirty() {
-        TLAwtUtilities.assertOffAwtThread();
+        TLSwingUtilities.assertOffAwtThread();
 
         if (renderedState != null) {
             markDirtyAtLocation(renderedState.location);
@@ -133,7 +134,8 @@ public class TLJ2DTurtleRenderer implements TLRenderer {
     }
 
     private void markDirtyAtLocation(Point2D loc) {
-        TLJ2DCanvas canvas = (TLJ2DCanvas) TLSingletonContext.get().getWindow().getCanvas();
+        /* TODO: context modularization */
+        TLJ2DCanvas canvas = (TLJ2DCanvas) TLSingleton.getContext().getWindow().getCanvas();
 
         if (statusBubble != null) {
             Rectangle r = statusBubble.getShape().getBounds();
@@ -147,20 +149,21 @@ public class TLJ2DTurtleRenderer implements TLRenderer {
 
     @Override
     public void preRender(Graphics2D g) {
-        TLAwtUtilities.assertOnAwtThread();
+        TLSwingUtilities.assertOnAwtThread();
 
         if (newState == null) {
             newState = new TLTurtleState();
         }
 
-        newState.set(TLSingletonContext.get().getSimulator().getTurtleState(owner));
+        /* TODO: context modularization */
+        newState.set(TLSingleton.getContext().getSimulator().getTurtleState(owner));
 
         refreshRenderState(g);
     }
 
     @Override
     public void render(Graphics2D g) {
-        TLAwtUtilities.assertOnAwtThread();
+        TLSwingUtilities.assertOnAwtThread();
 
         drawPaint(g);
         drawStatusBubble(g);

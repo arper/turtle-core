@@ -1,4 +1,4 @@
-package org.arper.turtle.impl.j2d;
+package org.arper.turtle.impl.swing;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.Executor;
@@ -7,7 +7,7 @@ import java.util.concurrent.Executors;
 import javax.swing.SwingUtilities;
 
 
-public class TLAwtUtilities {
+public class TLSwingUtilities {
     public static void assertOnAwtThread() {
         if (!SwingUtilities.isEventDispatchThread()) {
             throw new AssertionError("incorrectly off awt thread");

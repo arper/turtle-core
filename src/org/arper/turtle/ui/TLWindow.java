@@ -7,5 +7,4 @@ public interface TLWindow {
     void setTitle(String title);
     void addKeyListener(KeyListener listener);
     TLCanvas getCanvas();
-    TLConsole getConsole();
 }

@@ -1,13 +1,14 @@
 package org.arper.turtle;
 
 import java.io.InputStream;
+import java.io.PrintStream;
 
 import org.arper.turtle.config.TLApplicationConfig;
 import org.arper.turtle.controller.TLController;
 import org.arper.turtle.controller.TLObjective;
 import org.arper.turtle.impl.TLContext;
-import org.arper.turtle.impl.j2d.TLAwtUtilities;
-import org.arper.turtle.ui.TLConsole;
+import org.arper.turtle.impl.TLSingleton;
+import org.arper.turtle.impl.swing.TLSwingUtilities;
 
 import com.google.common.base.Preconditions;
 
@@ -15,45 +16,60 @@ import com.google.common.base.Preconditions;
 public final class TLApplication {
 
     public static TLApplication runObjectiveAsApplication(final TLObjective objective, Object... args) {
-        final TLApplication app = new TLApplication(TLApplicationConfig.DEFAULT);
-        
-        TLAwtUtilities.runOnAwtThread(new Runnable() {
+        final TLApplication app = create();
+
+        TLSwingUtilities.runOnAwtThread(new Runnable() {
             @Override
             public void run() {
                 app.context.getWindow().setTitle(objective.getClass().getSimpleName());
                 app.context.getWindow().setVisible(true);
-            }        
+            }
         }, false);
 
         app.startObjectiveWithNewTurtles(objective, args);
         return app;
     }
-    
-    public TLApplication(String configFileName) {
+
+    public static TLApplication createFromConfigFile(String configFileName) {
         /* TODO: TLApplication constructor */
         throw new UnsupportedOperationException("not yet implemented");
     }
 
-    public TLApplication(InputStream configFileInput) {
+    public static TLApplication createFromConfigStream(InputStream configStream) {
         /* TODO: TLApplication constructor */
         throw new UnsupportedOperationException("not yet implemented");
     }
 
-    public TLApplication(TLApplicationConfig config) {
+    public static TLApplication createFromConfig(TLApplicationConfig config) {
+        TLApplication app = new TLApplication(config);
+        TLSingleton.set(app, app.context);
+
+        return app;
+    }
+
+    public static TLApplication create() {
+        return createFromConfig(TLApplicationConfig.DEFAULT);
+    }
+
+    private TLApplication(TLApplicationConfig config) {
         Preconditions.checkNotNull(config, "TLApplication must have non-null TLApplicationConfig.");
+
         this.config = config;
         this.context = TLContext.create(config);
-        
-        console = context.getWindow().getConsole();
     }
 
     private final TLApplicationConfig config;
     private final TLContext context;
-    
-    public final TLConsole console;
+
+    public InputStream in = System.in;
+    public PrintStream out = System.out;
 
     public TLApplicationConfig getConfig() {
         return config;
+    }
+
+    public TLContext getContext() {
+        return context;
     }
 
     public void startController(final TLController controller, final Object... args) {
