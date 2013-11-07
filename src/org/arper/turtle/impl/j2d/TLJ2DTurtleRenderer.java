@@ -6,6 +6,7 @@ import java.awt.Color;
 import java.awt.Composite;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
@@ -37,6 +38,7 @@ public class TLJ2DTurtleRenderer implements TLRenderer {
     }
 
     private final TLTurtle owner;
+    
     private TLTurtleState renderedState;
     private TLTurtleState newState;
     private List<Point2D.Float> sampledPathPoints;
@@ -76,6 +78,18 @@ public class TLJ2DTurtleRenderer implements TLRenderer {
         boolean strokeChange = noState || newState.pathType != renderedState.pathType
                 || newState.thickness != renderedState.thickness;
 
+        /* segment committing; must do before stroke is refreshed */
+        if (renderedState != null &&
+                !sampledPathPoints.isEmpty() && (
+                strokeChange ||
+                newState.color != renderedState.color ||
+                newState.isPenDown != renderedState.isPenDown)) {
+            sampledPathPoints.add(renderedState.location);
+            drawPathSegments(g, renderedState.color);
+            sampledPathPoints.clear();
+        }
+        
+        /* stroke refreshing */
         if (strokeChange) {
             int cap, join;
             if (newState.pathType == TLPathType.Sharp) {
@@ -86,21 +100,6 @@ public class TLJ2DTurtleRenderer implements TLRenderer {
                 join = BasicStroke.JOIN_ROUND;
             }
             stroke = new BasicStroke(newState.thickness, cap, join);
-        }
-
-        /* segment committing */
-        if (renderedState != null &&
-                !sampledPathPoints.isEmpty() && (
-                strokeChange ||
-                newState.color != renderedState.color ||
-                newState.isPenDown != renderedState.isPenDown)) {
-            sampledPathPoints.add(renderedState.location);
-            g.setColor(renderedState.color);
-            Stroke oldStroke = g.getStroke();
-            g.setStroke(stroke);
-            TLJ2DUtilities.drawPath(g, sampledPathPoints);
-            g.setStroke(oldStroke);
-            sampledPathPoints.clear();
         }
 
         /* path point sampling */
@@ -139,7 +138,7 @@ public class TLJ2DTurtleRenderer implements TLRenderer {
 
         if (statusBubble != null) {
             Rectangle r = statusBubble.getShape().getBounds();
-            r.translate((int)Math.round(loc.getX()), (int)Math.round(loc.getY()));
+            r.translate((int) Math.round(loc.getX()), (int) Math.round(loc.getY()));
             canvas.markDirty(r);
         }
 
@@ -148,7 +147,7 @@ public class TLJ2DTurtleRenderer implements TLRenderer {
     }
 
     @Override
-    public void preRender(Graphics2D g) {
+    public void preRender(Graphics2D g, Shape canvasClipRect) {
         TLSwingUtilities.assertOnAwtThread();
 
         if (newState == null) {
@@ -162,10 +161,15 @@ public class TLJ2DTurtleRenderer implements TLRenderer {
     }
 
     @Override
-    public void render(Graphics2D g) {
+    public void render(Graphics2D g, Shape canvasClipRect) {
         TLSwingUtilities.assertOnAwtThread();
 
-        drawPaint(g);
+        Shape oldClip = g.getClipBounds();
+        g.clip(canvasClipRect);
+        drawPathSegments(g, newState.color);
+        drawPaintCursor(g);
+        g.setClip(oldClip);
+        
         drawStatusBubble(g);
         drawTurtle(g);
 
@@ -177,7 +181,7 @@ public class TLJ2DTurtleRenderer implements TLRenderer {
 
     int max = 0;
 
-    private void drawPaint(Graphics2D g) {
+    private void drawPaintCursor(Graphics2D g) {
         if (!newState.isPenDown) {
             return;
         }
@@ -188,15 +192,20 @@ public class TLJ2DTurtleRenderer implements TLRenderer {
                 newState.location.y - cSize / 2,
                 cSize,
                 cSize));
-
-        if (!sampledPathPoints.isEmpty()) {
-            Stroke oldStroke = g.getStroke();
-            g.setStroke(stroke);
-            TLJ2DUtilities.drawPath(g, sampledPathPoints);
-            g.setStroke(oldStroke);
-        }
     }
-
+    
+    private void drawPathSegments(Graphics2D g, Color color) {
+        if (sampledPathPoints.isEmpty()) {
+            return;
+        }
+        
+        Stroke oldStroke = g.getStroke();
+        g.setStroke(stroke);
+        g.setColor(color);
+        TLJ2DUtilities.drawPath(g, sampledPathPoints);
+        g.setStroke(oldStroke);
+    }
+    
     private void drawStatusBubble(Graphics2D g) {
         if (statusBubble == null) {
             return;

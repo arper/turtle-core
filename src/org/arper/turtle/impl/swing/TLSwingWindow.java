@@ -1,5 +1,6 @@
 package org.arper.turtle.impl.swing;
 
+import java.awt.BorderLayout;
 import java.awt.Toolkit;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
@@ -51,9 +52,10 @@ public class TLSwingWindow extends WebFrame implements TLWindow {
     }
 
     public TLSwingWindow(int canvasWidth, int canvasHeight, Iterable<Class<?>> pluginClasses) {
-        canvas = new TLJ2DCanvas(canvasWidth, canvasHeight, 55);
+        canvas = new TLJ2DCanvas(canvasWidth, canvasHeight);
         plugins = TLSwingPluginLoader.loadPluginsForClasses(pluginClasses);
-        layoutComponents(canvas);
+        
+        layoutComponents();
 
         setWindowIcon("icons/turtle.png");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -107,7 +109,7 @@ public class TLSwingWindow extends WebFrame implements TLWindow {
         }
     }
 
-    private void layoutComponents(JComponent canvas) {
+    private void layoutComponents() {
         /* Canvas */
         JScrollPane canvasPane = TLSwingStyles.transparent(new WebScrollPane(canvas, false, false));
 
@@ -116,7 +118,8 @@ public class TLSwingWindow extends WebFrame implements TLWindow {
         pluginLayers.setLayout(new OverlayLayout(pluginLayers));
         pluginLayers.add(canvasPane);
 
-        getContentPane().add(pluginLayers);
+        getContentPane().setLayout(new BorderLayout());
+        getContentPane().add(pluginLayers, BorderLayout.CENTER);
     }
 
     private void setWindowIcon(String path) {

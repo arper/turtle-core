@@ -7,6 +7,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.util.concurrent.ExecutionException;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
@@ -15,30 +16,49 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
+import com.alee.extended.painter.NinePatchIconPainter;
 import com.alee.extended.painter.NinePatchStatePainter;
 import com.alee.extended.painter.Painter;
 import com.alee.extended.painter.PainterSupport;
 import com.alee.extended.painter.TexturePainter;
 import com.alee.laf.panel.WebPanel;
 import com.alee.utils.ninepatch.NinePatchIcon;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 
 public class TLSwingStyles {
 
-    public static BufferedImage loadStyleImage(String path) throws IOException {
-        URL url = ClassLoader.getSystemResource(path);
-        if (url == null) {
-            throw new IOException("Cannot find resource " + path);
-        }
+    private static final LoadingCache<String, BufferedImage> IMAGES_CACHE = CacheBuilder.newBuilder()
+            .concurrencyLevel(2)
+            .weakValues()
+            .build(new CacheLoader<String, BufferedImage>() {
+                @Override
+                public BufferedImage load(String key) throws Exception {
+                    URL url = ClassLoader.getSystemResource(key);
+                    if (url == null) {
+                        throw new IOException("Cannot find resource " + key);
+                    }
 
-        return ImageIO.read(url);
-    }
-
+                    return ImageIO.read(url);
+                }
+            });
+    
     public static Painter<?> getBackgroundPainter() {
         try {
-            return new TexturePainter<JComponent>(loadStyleImage("styles/bg.png"));
-        } catch (IOException e) {
+            return new TexturePainter<JComponent>(IMAGES_CACHE.get("styles/bg.png"));
+        } catch (ExecutionException e) {
             e.printStackTrace();
+            return null;
+        }
+    }
+    
+    public static Painter<?> getPanelPainter() {
+        try {
+            return new NinePatchIconPainter<>(IMAGES_CACHE.get("styles/panel.9.png"));
+        } catch (ExecutionException e) {
+            e.getCause().printStackTrace();
             return null;
         }
     }
@@ -47,20 +67,22 @@ public class TLSwingStyles {
         try {
             return new NinePatchStatePainter<JComponent>(
                     new ImmutableMap.Builder<String, NinePatchIcon>()
-                    .put("selected", new NinePatchIcon(loadStyleImage("styles/s.9.png")))
-                    .put("normal", new NinePatchIcon(loadStyleImage("styles/n.9.png")))
+                    .put("selected", new NinePatchIcon(IMAGES_CACHE.get("styles/p.9.png")))
+                    .put("rollover", new NinePatchIcon(IMAGES_CACHE.get("styles/r.9.png")))
+                    .put("pressed", new NinePatchIcon(IMAGES_CACHE.get("styles/p.9.png")))
+                    .put("normal", new NinePatchIcon(IMAGES_CACHE.get("styles/n.9.png")))
                     .build());
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
+        } catch (ExecutionException e) {
+            e.getCause().printStackTrace();
             return null;
         }
     }
-
+    
     private static Painter<?> loadPainter(JComponent comp) throws IOException {
         if (comp instanceof JButton) {
             return getButtonPainter();
         } else {
-            return getBackgroundPainter();
+            return getButtonPainter();
         }
     }
 
@@ -104,10 +126,21 @@ public class TLSwingStyles {
     }
 
     public static JComponent pad(JComponent comp, int padding) {
-        JComponent parent = new JPanel(new BorderLayout());
+        return pad(comp, padding, padding, padding, padding);
+    }
+
+    public static JComponent pad(JComponent comp, int top, int right, int bottom, int left) {
+        JComponent parent = new WebPanel(new BorderLayout());
         parent.setOpaque(comp.isOpaque());
         parent.add(comp, BorderLayout.CENTER);
-        parent.setBorder(BorderFactory.createEmptyBorder(padding, padding, padding, padding));
+        comp.setBorder(BorderFactory.createEmptyBorder(top, left, bottom, right));
+        return parent;
+    }
+    
+    public static JComponent noLayout(JComponent comp) {
+        JComponent parent = transparent(new WebPanel());
+        parent.setLayout(null);
+        parent.add(comp);
         return parent;
     }
 

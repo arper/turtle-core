@@ -18,7 +18,7 @@ public class TriangleTurtleObjective extends TLSingleTurtleObjective {
 
         t.startFillShape();
         t.setColor(Color.GREEN);
-        t.moveForward(300);
+        t.moveForward(500);
         t.turnLeft(120);
 
         t.setColor(Color.BLUE);

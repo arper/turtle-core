@@ -5,19 +5,22 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.InputStream;
 import java.io.PrintStream;
 
-import javax.swing.ImageIcon;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JComponent;
-import javax.swing.SwingConstants;
+import javax.swing.JToggleButton;
 
 import org.arper.turtle.impl.TLSingleton;
 import org.arper.turtle.impl.swing.TLSwingPlugin;
 import org.arper.turtle.impl.swing.TLSwingStyles;
 import org.arper.turtle.impl.swing.TLSwingWindow;
 
-import com.alee.extended.panel.WebCollapsiblePane;
+import com.alee.laf.button.WebToggleButton;
 import com.alee.laf.panel.WebPanel;
 import com.alee.laf.scroll.WebScrollPane;
 import com.alee.laf.text.WebTextField;
@@ -34,17 +37,42 @@ public class TLSwingConsolePlugin implements TLSwingPlugin {
         out = streamPair.out;
         in = streamPair.in;
 
-        JComponent console = layoutConsole(inputField, textPane);
-        console.setPreferredSize(new Dimension(400, 300));
-
-        JComponent flyout = createFlyout(console);
-        window.addPluginLayer(TLSwingStyles.anchor(flyout,
-                BorderLayout.SOUTH, BorderLayout.WEST));
+        final JComponent console = layoutConsole(inputField, textPane);
+        
+        final JToggleButton consoleButton = new WebToggleButton("Console");
+        consoleButton.setForeground(new Color(190, 190, 190));
+        consoleButton.setPreferredSize(new Dimension(100, 38));
+        TLSwingStyles.applyStyle(consoleButton);
+        WebPanel bottomBar = new WebPanel(false);
+        bottomBar.setLayout(new BoxLayout(bottomBar, BoxLayout.X_AXIS));
+        bottomBar.add(consoleButton);
+        TLSwingStyles.setPainter(bottomBar, TLSwingStyles.getPanelPainter());
+        window.getContentPane().add(bottomBar, BorderLayout.SOUTH);
+        
+        final JComponent consoleFrame = makeResizable(console);
+        consoleFrame.setPreferredSize(new Dimension(100, 100));
+        consoleFrame.setBounds(100, 100, 300, 300);
+        window.addPluginLayer(TLSwingStyles.noLayout(consoleFrame));
+        
+        consoleFrame.setVisible(false);
+        
+        consoleButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                consoleFrame.setVisible(consoleButton.isSelected());
+            }
+        });
     }
 
     private InputStream in;
     private PrintStream out;
-
+    
+    private JComponent makeResizable(JComponent comp) {
+        JComponent parent = comp;
+        parent.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        new ComponentResizer(parent);
+        return parent;
+    }
     private WebTextPane createOutputPane() {
         WebTextPane textPane = TLSwingStyles.transparent(new WebTextPane() {
             private static final long serialVersionUID = 1L;
@@ -69,28 +97,7 @@ public class TLSwingConsolePlugin implements TLSwingPlugin {
 
         return textField;
     }
-
-    private WebCollapsiblePane createFlyout(JComponent console) {
-        WebCollapsiblePane consoleFlyout = new WebCollapsiblePane();
-        consoleFlyout.setContent(console);
-        consoleFlyout.setContentMargin(0);
-        consoleFlyout.setTitlePanePostion (SwingConstants.TOP);
-        consoleFlyout.setStateIconPostion(SwingConstants.LEFT);
-        swapIcons(consoleFlyout);
-
-        consoleFlyout.getExpandButton().setPainter(TLSwingStyles.getButtonPainter());
-        consoleFlyout.getExpandButton().setText("  Console");
-        consoleFlyout.getExpandButton().setFontSize(13);
-        consoleFlyout.getExpandButton().setFontName("Lucida");
-        consoleFlyout.getExpandButton().setForeground(Color.white);
-
-        consoleFlyout.getHeaderPanel().setUndecorated(true);
-        consoleFlyout.setExpanded(false, false);
-        TLSwingStyles.setUndecorated(consoleFlyout);
-
-        return consoleFlyout;
-    }
-
+    
     private JComponent layoutConsole(WebTextField inputField, WebTextPane outputPane) {
 
         WebPanel comp = new WebPanel(new BorderLayout()) {
@@ -109,12 +116,6 @@ public class TLSwingConsolePlugin implements TLSwingPlugin {
         comp.setBackground(new Color(255, 255, 255, 32));
         comp.setOpaque(false);
         return comp;
-    }
-
-    private void swapIcons(WebCollapsiblePane pane) {
-        ImageIcon collapsed = pane.getCollapseIcon();
-        pane.setCollapseIcon(pane.getExpandIcon());
-        pane.setExpandIcon(collapsed);
     }
 
     @Override

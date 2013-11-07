@@ -1,8 +1,6 @@
 package org.arper.turtle.impl.j2d;
 
-import java.awt.AlphaComposite;
 import java.awt.Color;
-import java.awt.Composite;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -10,7 +8,6 @@ import java.awt.Graphics2D;
 import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
-import java.awt.Shape;
 import java.awt.Transparency;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -42,10 +39,9 @@ import com.google.common.cache.LoadingCache;
 @SuppressWarnings("serial")
 public class TLJ2DCanvas extends JPanel implements TLCanvas {
 
-    public TLJ2DCanvas(int width, int height, int padding) {
+    public TLJ2DCanvas(int width, int height) {
         this.drawableWidth = width;
         this.drawableHeight = height;
-        this.padding = padding;
 
         /* TODO: module state */
         this.renderers = CacheBuilder.newBuilder()
@@ -75,8 +71,7 @@ public class TLJ2DCanvas extends JPanel implements TLCanvas {
     private final int drawableWidth, drawableHeight;
     private float zoom;
     private final LoadingCache<TLTurtle, TLRenderer> renderers;
-    private final Rectangle clip = new Rectangle();
-    private final int padding;
+    private final Rectangle worldRepaintClip = new Rectangle();
 
     @Override
     public TLRenderer getRenderer(TLTurtle turtle) {
@@ -95,8 +90,7 @@ public class TLJ2DCanvas extends JPanel implements TLCanvas {
 
     @Override
     public Dimension getPreferredSize() {
-        return new Dimension(2 * padding + Math.round(drawableWidth * zoom),
-                2 * padding + Math.round(drawableHeight * zoom));
+        return new Dimension(Math.round(drawableWidth * zoom), Math.round(drawableHeight * zoom));
     }
 
     private void createDrawing() {
@@ -121,11 +115,11 @@ public class TLJ2DCanvas extends JPanel implements TLCanvas {
     }
 
     private void renderFrame() {
-        if (!isValid() || !isVisible()) {
+        if (!isValid() || !isVisible() || worldRepaintClip.isEmpty()) {
             return;
         }
 
-        repaint(clip);
+        repaint(getWorldDirtyClip());
     }
 
     private void render(Graphics g) {
@@ -135,25 +129,30 @@ public class TLJ2DCanvas extends JPanel implements TLCanvas {
 
         Graphics2D bufferGraphics = (Graphics2D) g;
         AffineTransform t = bufferGraphics.getTransform();
-        bufferGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        bufferGraphics.scale(zoom, zoom);
+        bufferGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, 
+                RenderingHints.VALUE_ANTIALIAS_ON);
         drawBorder(bufferGraphics);
 
         Graphics2D drawingGraphics = getDrawingGraphics();
-        drawingGraphics.translate(padding + drawableWidth / 2, padding + drawableHeight / 2);
+        Rectangle canvasClip = new Rectangle(-drawableWidth / 2, -drawableHeight / 2, 
+                drawableWidth, drawableHeight);
+        
+        drawingGraphics.translate(drawableWidth / 2, drawableHeight / 2);
         synchronized (turtles) {
             for (TLTurtle turtle : turtles) {
-                getRenderer(turtle).preRender(drawingGraphics);
+                getRenderer(turtle).preRender(drawingGraphics, canvasClip);
             }
             drawingGraphics.dispose();
-            bufferGraphics.drawImage(drawing, 0, 0, null);
-//
-//
-            bufferGraphics.translate(padding + drawableWidth / 2, padding + drawableHeight / 2);
-            for (TLTurtle turtle : turtles) {
-                getRenderer(turtle).render(bufferGraphics);
-            }
+            bufferGraphics.drawImage(drawing, getPadX(), getPadY(), 
+                    getDrawingWidth(), getDrawingHeight(), null);
 
+
+            bufferGraphics.translate(getPadX() + drawableWidth / 2, getPadY() + drawableHeight / 2);
+            bufferGraphics.scale(zoom, zoom);
+            
+            for (TLTurtle turtle : turtles) {
+                getRenderer(turtle).render(bufferGraphics, canvasClip);
+            }
         }
 
         bufferGraphics.setTransform(t);
@@ -161,29 +160,25 @@ public class TLJ2DCanvas extends JPanel implements TLCanvas {
 
     private void drawBorder(Graphics2D g) {
         Area s = new Area(new Rectangle(0, 0, getWidth(), getHeight()));
-        s.subtract(new Area(new Rectangle(padding, padding, drawableWidth, drawableHeight)));
+        s.subtract(new Area(getDrawingRectangle()));
 
-        g.setColor(TLUtils.getColorByName("brown"));
-        Composite composite = g.getComposite();
-        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.3f));
-
+        g.setColor(new Color(40, 40, 40));
         g.fill(s);
-        g.setComposite(composite);
     }
 
-    private void updateClip(Rectangle newClip) {
+    private void requestWorldRepaint(Rectangle r) {
         TLSwingUtilities.assertOnAwtThread();
-        if (clip.isEmpty()) {
-            clip.setBounds(newClip);
-        } else if (!newClip.isEmpty()) {
-            clip.add(newClip);
+        if (worldRepaintClip.isEmpty()) {
+            worldRepaintClip.setBounds(r);
+        } else if (!r.isEmpty()) {
+            worldRepaintClip.add(r);
         }
     }
 
     @Override
     public void paint(Graphics g) {
         render(g);
-        clip.setBounds(0, 0, 0, 0);
+        worldRepaintClip.setBounds(0, 0, 0, 0);
     }
 
     private static Rectangle getRectangleContaining(Point2D p1, Point2D p2) {
@@ -202,8 +197,11 @@ public class TLJ2DCanvas extends JPanel implements TLCanvas {
     }
 
     public void markDirty(Point2D p, int size) {
-        markDirty(new Rectangle((int) Math.floor(p.getX()) - size, (int) Math.floor(p.getY()) - size,
-                2 * size, 2 * size));
+        markDirty(new Rectangle(
+                (int) Math.floor(p.getX()) - size, 
+                (int) Math.floor(p.getY()) - size,
+                2 * size, 
+                2 * size));
     }
 
     private static void scaleRectangle(Rectangle r, float scale) {
@@ -212,16 +210,21 @@ public class TLJ2DCanvas extends JPanel implements TLCanvas {
     }
 
     public void markDirty(final Rectangle r) {
-        r.grow(1, 1);
-        r.translate(padding + drawableWidth / 2, padding + drawableHeight / 2);
-        scaleRectangle(r, zoom);
-
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                updateClip(r);
+                requestWorldRepaint(r);
             }
         });
+    }
+    
+    private Rectangle getWorldDirtyClip() {
+        Rectangle transformed = new Rectangle(worldRepaintClip);
+        transformed.translate(drawableWidth / 2, drawableHeight / 2);
+        scaleRectangle(transformed, zoom);
+        transformed.grow(1, 1);
+        transformed.translate(getPadX(), getPadY());
+        return transformed;
     }
 
     @Override
@@ -250,5 +253,25 @@ public class TLJ2DCanvas extends JPanel implements TLCanvas {
             System.err.println("Invalid zoom: " + zoom);
         }
     }
+    
+    private Rectangle getDrawingRectangle() {
+        return new Rectangle(getPadX(), getPadY(), getDrawingWidth(), getDrawingHeight());
+    }
+    
+    private int getDrawingWidth() {
+        return (int) Math.ceil(drawableWidth * zoom);
+    }
+    
+    private int getDrawingHeight() {
+        return (int) Math.ceil(drawableHeight * zoom);
+    }
+    
+    private int getPadX() {
+        return Math.max(0, (getWidth() - getDrawingWidth()) / 2);
+    }
 
+    private int getPadY() {
+        return Math.max(0, (getHeight() - getDrawingHeight()) / 2);
+    }
+    
 }

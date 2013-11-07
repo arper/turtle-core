@@ -1,11 +1,9 @@
 package org.arper.turtle.impl.swing.plugins;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
+import java.awt.Component;
 import java.awt.Desktop;
 import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -45,45 +43,71 @@ public class TLSwingToolbarPlugin implements TLSwingPlugin {
     @Override
     public void initSwingPlugin(TLSwingWindow window) {
         this.window = window;
+        initButtons();
+        
+        JComponent tools = createToolbar();
+        TLSwingStyles.setPainter(tools, TLSwingStyles.getPanelPainter());
 
-        JComponent toolbar = TLSwingStyles.pad(createToolbar(), 4);
-        window.addPluginLayer(TLSwingStyles.anchor(toolbar, BorderLayout.NORTH));
+        window.add(tools, BorderLayout.NORTH);
     }
 
     private TLSwingWindow window;
     private WebButton playPauseButton;
+    private WebButton restartButton;
+    private WebButton updateButton;
+    private WebButton helpButton;
     private ImageIcon playIcon, pauseIcon;
 
-
     private JComponent createToolbar() {
-        WebPanel tools = TLSwingStyles.transparent(new WebPanel(false));
-
+        JComponent tools = new WebPanel(false) {
+            @Override
+            public Component add(Component comp) {
+                super.add(comp);
+                super.add(Box.createRigidArea(new Dimension(2,2)));
+                return comp;
+            }
+        };
+        
+        tools.setBackground(null);
+        tools.setOpaque(false);
         tools.setLayout(new BoxLayout(tools, BoxLayout.X_AXIS));
 
-        playPauseButton = createToolbarButton(null, "\u25B8", "Play/Pause", Hotkey.P);
-        playPauseButton.setFont(new Font("Helvetica", Font.BOLD, 37));
-        playPauseButton.setMargin(new Insets(2, 2, 2, 2));
-        playPauseButton.setForeground(new Color(15, 159, 11));
+        tools.add(createToolbarButton("icons/play.png", "", "", Hotkey.A));
+        tools.add(createToolbarButton("icons/pause.png", "", "", Hotkey.A));
+        tools.add(createToolbarButton("icons/restart.png", "", "", Hotkey.A));
+        tools.add(createToolbarButton("icons/help.png", "", "", Hotkey.A));
+        tools.add(createToolbarButton("icons/console.png", "", "", Hotkey.A));
+        tools.add(createToolbarButton("icons/config.png", "", "", Hotkey.A));
+        tools.add(createToolbarButton("icons/screenshot.png", "", "", Hotkey.A));
+        tools.add(createToolbarButton("icons/properties.png", "", "", Hotkey.A));
+        
+//        tools.add(playPauseButton);
+//        tools.add(restartButton);
+//        tools.add(Box.createHorizontalGlue());
+//        tools.add(updateButton);
+//        tools.add(helpButton);
+        
+        return TLSwingStyles.pad(tools, 2);
+    }
+    
 
+    private void initButtons() {
+        playPauseButton = createToolbarButton(null, "", "Play/Pause", Hotkey.P);
         try {
             playIcon = new ImageIcon(ImageIO.read(ClassLoader.getSystemResource("icons/play.png")));
         } catch (Exception e) {}
         try {
             pauseIcon = new ImageIcon(ImageIO.read(ClassLoader.getSystemResource("icons/pause.png")));
         } catch (Exception e) {}
-
-        playPauseButton.setText("");
         playPauseButton.setIcon(playIcon);
-
         playPauseButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
                 playPauseAction();
             }
         });
-        tools.add(playPauseButton);
 
-        WebButton restartButton = createToolbarButton("icons/restart.png", "Restart",
+        restartButton = createToolbarButton("icons/restart.png", "Restart",
                 "Restart Application", Hotkey.R);
         restartButton.addActionListener(new ActionListener() {
             @Override
@@ -91,9 +115,8 @@ public class TLSwingToolbarPlugin implements TLSwingPlugin {
                 /* TODO: restart */
             }
         });
-        tools.add(restartButton);
 
-        WebButton helpButton = createToolbarButton("icons/help2.png", "Help",
+        helpButton = createToolbarButton("icons/console.png", "Help",
                 "Help - Go to Online Documentation (http://stanford.edu/~alexryan/cgi-bin/turtledoc/)",
                 Hotkey.F1);
         helpButton.addActionListener(new ActionListener() {
@@ -103,18 +126,13 @@ public class TLSwingToolbarPlugin implements TLSwingPlugin {
             }
         });
 
-        WebButton updateButton = createToolbarButton("icons/update.png", "Update", "Download latest libraries", Hotkey.F2);
+        updateButton = createToolbarButton("icons/screenshot.png", "Update", "Download latest libraries", Hotkey.F2);
         updateButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 updateAction();
             }
         });
-        tools.add(Box.createHorizontalGlue());
-        tools.add(updateButton);
-        tools.add(helpButton);
-
-        return tools;
     }
 
     private void playPauseAction() {
@@ -192,7 +210,7 @@ public class TLSwingToolbarPlugin implements TLSwingPlugin {
                         "Could not update libraries: unknown library location.",
                         "Error updating libraries",
                         JOptionPane.ERROR_MESSAGE);
-            }
+            } 
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -209,10 +227,10 @@ public class TLSwingToolbarPlugin implements TLSwingPlugin {
         HotkeyManager.registerHotkey (window, b, h, new ButtonHotkeyRunnable ( b, 50 ), TooltipWay.trailing );
         TooltipManager.setTooltip ( b, tooltip, TooltipWay.down, 0 );
 
-        int size = 48;
-        b.setPreferredSize(new Dimension(size, size));
-        b.setMinimumSize(b.getPreferredSize());
-        b.setMaximumSize(b.getPreferredSize());
+        Dimension size = new Dimension(44, 38);
+        b.setPreferredSize(size);
+        b.setMinimumSize(size);
+        b.setMaximumSize(size);
         return b;
     }
 
@@ -220,21 +238,9 @@ public class TLSwingToolbarPlugin implements TLSwingPlugin {
     private void refreshPlayPauseButton() {
         TLSimulationSettings settings = TLSingleton.getContext().getSimulator().getSettings();
         if (!settings.isPaused()) {
-            if (pauseIcon != null) {
-                playPauseButton.setText("");
-                playPauseButton.setIcon(pauseIcon);
-            } else {
-                playPauseButton.setText("Play");
-                playPauseButton.setIcon(null);
-            }
+            playPauseButton.setIcon(pauseIcon);
         } else {
-            if (playIcon != null) {
-                playPauseButton.setText("");
-                playPauseButton.setIcon(playIcon);
-            } else {
-                playPauseButton.setText("Pause");
-                playPauseButton.setIcon(null);
-            }
+            playPauseButton.setIcon(playIcon);
         }
     }
 
