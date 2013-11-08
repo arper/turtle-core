@@ -18,7 +18,6 @@ import org.arper.turtle.impl.swing.TLSwingWindow;
 
 public class TLSwingPauseOverlayPlugin implements TLSwingPlugin {
 
-
     @Override
     public void initSwingPlugin(TLSwingWindow window) {
         pauseOverlayComponent = createPauseOverlay();

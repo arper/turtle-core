@@ -3,27 +3,34 @@ package org.arper.turtle.impl.swing.plugins;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Insets;
-import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ComponentListener;
+import java.awt.geom.Point2D;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
-import java.util.concurrent.Callable;
+import java.io.UnsupportedEncodingException;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.JComponent;
+import javax.swing.JTextField;
 import javax.swing.JToggleButton;
-import javax.swing.SwingUtilities;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultCaret;
+import javax.swing.text.JTextComponent;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
 
-import org.arper.turtle.impl.TLProxyUtils;
 import org.arper.turtle.impl.TLSingleton;
 import org.arper.turtle.impl.swing.TLSwingPlugin;
 import org.arper.turtle.impl.swing.TLSwingStyles;
+import org.arper.turtle.impl.swing.TLSwingUtilities;
 import org.arper.turtle.impl.swing.TLSwingWindow;
 
 import com.alee.laf.button.WebToggleButton;
@@ -31,6 +38,7 @@ import com.alee.laf.panel.WebPanel;
 import com.alee.laf.scroll.WebScrollPane;
 import com.alee.laf.text.WebTextField;
 import com.alee.laf.text.WebTextPane;
+import com.alee.managers.hotkey.Hotkey;
 
 public class TLSwingConsolePlugin implements TLSwingPlugin {
 
@@ -38,46 +46,24 @@ public class TLSwingConsolePlugin implements TLSwingPlugin {
     public void initSwingPlugin(final TLSwingWindow window) {
         WebTextPane textPane = createOutputPane();
         WebTextField inputField = createInputField();
-
-        TLSwingConsoleImpl.StreamPair streamPair = TLSwingConsoleImpl.create(inputField, textPane);
-        out = streamPair.out;
-        in = streamPair.in;
+        
+        ConsoleImpl impl = new ConsoleImpl(inputField, textPane);
+        out = new PrintStream(impl.out, true);
+        in = impl.in;
 
         final JComponent console = layoutConsole(inputField, textPane);
 
-        final JToggleButton consoleButton = new WebToggleButton("Console");
-        consoleButton.setForeground(new Color(190, 190, 190));
-        consoleButton.setPreferredSize(new Dimension(100, 38));
-        TLSwingStyles.applyStyle(consoleButton);
-        WebPanel bottomBar = new WebPanel(false);
-        bottomBar.setLayout(new BoxLayout(bottomBar, BoxLayout.X_AXIS));
-        bottomBar.add(consoleButton);
-        TLSwingStyles.setPainter(bottomBar, TLSwingStyles.getPanelPainter());
-        window.getContentPane().add(bottomBar, BorderLayout.SOUTH);
+        final JToggleButton consoleButton = new WebToggleButton();
+        TLSwingToolbarPlugin.styleToolbarButton(consoleButton, 
+                window, "icons/console.png", "Show/Hide Console", Hotkey.TAB);
 
-        final JComponent consoleFrame = makeResizable(console);
+        final JComponent consoleFrame = TLSwingUtilities.makeResizable(console, 0, 5, 5, 0);
         consoleFrame.setPreferredSize(new Dimension(100, 100));
         consoleFrame.setBounds(100, 100, 300, 300);
+        consoleFrame.setLocation(100, 100);
 
-        final JComponent parent = TLSwingStyles.noLayout(consoleFrame);
-        window.addPluginLayer(parent);
+        window.addPluginLayer(TLSwingStyles.noLayout(consoleFrame));
         consoleFrame.setVisible(false);
-
-
-        Callable<Void> consoleAnchorFunction = new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                Point pos = SwingUtilities.convertPoint(consoleButton, 0, 0, parent);
-                pos.y -= consoleFrame.getHeight();
-                consoleFrame.setLocation(pos.x, pos.y);
-                return null;
-            }
-        };
-
-        window.addComponentListener(TLProxyUtils.proxyCallableForListenerEvents(
-                ComponentListener.class, consoleAnchorFunction, null));
-        consoleButton.addComponentListener(TLProxyUtils.proxyCallableForListenerEvents(
-                ComponentListener.class, consoleAnchorFunction, null));
 
         consoleButton.addActionListener(new ActionListener() {
             @Override
@@ -85,17 +71,18 @@ public class TLSwingConsolePlugin implements TLSwingPlugin {
                 consoleFrame.setVisible(consoleButton.isSelected());
             }
         });
+        
+        TLSwingUtilities.anchorComponent(consoleFrame,
+                new Point2D.Double(0, 0),
+                window.getPluginLayers(),
+                new Point2D.Double(0, 0));
+        
+        window.getSwingPlugin(TLSwingToolbarPlugin.Top.class).add(
+                consoleButton, BorderLayout.WEST);
     }
 
     private InputStream in;
     private PrintStream out;
-
-    private JComponent makeResizable(JComponent comp) {
-        JComponent parent = comp;
-        parent.setBorder(BorderFactory.createEmptyBorder(5, 0, 0, 5));
-        new ComponentResizer(new Insets(7, 0, 0, 7), parent);
-        return parent;
-    }
 
     private WebTextPane createOutputPane() {
         WebTextPane textPane = TLSwingStyles.transparent(new WebTextPane() {
@@ -104,7 +91,7 @@ public class TLSwingConsolePlugin implements TLSwingPlugin {
             @Override
             public void paintComponent(Graphics g) {
                 g.setColor(getBackground());
-                g.fillRect(getX(), getY(), getWidth(), getHeight());
+                g.fillRect(0, 0, getWidth(), getHeight());
                 super.paintComponent(g);
             }
         });
@@ -148,5 +135,145 @@ public class TLSwingConsolePlugin implements TLSwingPlugin {
             TLSingleton.getApplication().out = out;
             TLSingleton.getApplication().in = in;
         }
+    }
+
+
+    private static final SimpleAttributeSet INPUT_TEXT_ATTR;
+    private static final SimpleAttributeSet OUTPUT_TEXT_ATTR;
+
+    static {
+        INPUT_TEXT_ATTR = new SimpleAttributeSet();
+        StyleConstants.setForeground(INPUT_TEXT_ATTR, Color.GREEN.darker());
+
+        OUTPUT_TEXT_ATTR = new SimpleAttributeSet();
+        StyleConstants.setForeground(OUTPUT_TEXT_ATTR, Color.BLUE);
+    }
+    
+    private static class ConsoleImpl {
+
+        private final JTextComponent textPane;
+        private final JTextField inputTextField;
+
+        public ConsoleImpl(JTextField textField, JTextComponent textPane) {
+            this.textPane = textPane;
+            this.inputTextField = textField;
+
+            textPane.setEditable(false);
+            textPane.setFont(new Font("Lucida Console", Font.PLAIN, 13));
+            ((DefaultCaret)textPane.getCaret()).setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
+
+            inputTextField.setFont(new Font("Lucida Console", Font.PLAIN, 13));
+
+            inputTextField.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    String text = inputTextField.getText() + '\n';
+                    doPrint(text, INPUT_TEXT_ATTR);
+                    inputTextField.setText("");
+                    byte[] bytes;
+                    try {
+                        bytes = text.getBytes("UTF-8");
+                    } catch (UnsupportedEncodingException e1) {
+                        e1.printStackTrace();
+                        return;
+                    }
+                    for (byte b : bytes) {
+                        inputBuffer.add(b);
+                    }
+                }
+            });
+        }
+
+        private void doPrint(final String text, final AttributeSet settings) {
+            TLSwingUtilities.runOnAwtThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        textPane.getDocument().insertString(textPane.getDocument().getLength(),
+                                text, settings);
+                    } catch (BadLocationException e) {
+                        e.printStackTrace();
+                    }
+                    //                BoundedRangeModel brm = textScrollPane.getVerticalScrollBar().getModel();
+                    //                boolean atBottom = brm.getValue() + brm.getExtent() >= brm.getMaximum() - 5;
+                    //                try {
+                    //                    textPane.getDocument().insertString(textPane.getDocument().getLength(),
+                    //                            text, settings);
+                    //                } catch (BadLocationException e1) {
+                    //                    e1.printStackTrace();
+                    //                }
+                    //                if (atBottom) {
+                    //                    textPane.setCaretPosition(textPane.getDocument().getLength());
+                    //                    brm.setValue(brm.getMaximum() - brm.getExtent());
+                    //                    Rectangle v = textPane.getVisibleRect();
+                    //                    v.y = textPane.getHeight() - v.height;
+                    //                    textPane.scrollRectToVisible(v);
+                    //                }
+                }
+            }, false);
+        }
+
+
+        private final BlockingQueue<Byte> inputBuffer = new LinkedBlockingQueue<Byte>();
+        private final InputStream in = new InputStream() {
+            @Override
+            public int read(byte[] b, int off, int len) throws IOException {
+                if (len == 0)
+                    return 0;
+
+                int count = 0;
+                do {
+                    int next = read();
+                    if (next == -1)
+                        return count;
+                    b[off + count] = (byte)next;
+                    ++count;
+                } while (count < len && available() > 0 && b[count-1] != '\n');
+
+                return count;
+            }
+
+            @Override
+            public int available() throws IOException {
+                return inputBuffer.size();
+            }
+
+            @Override
+            public void close() throws IOException {
+                inputBuffer.clear();
+                super.close();
+            }
+
+            @Override
+            public int read() throws IOException {
+                try {
+                    return inputBuffer.take();
+                } catch (InterruptedException e) {
+                    return -1;
+                }
+            }
+        };
+
+        private final OutputStream out = new OutputStream() {
+            @Override
+            public void write(byte[] b) throws IOException {
+                write(b, 0, b.length);
+            }
+
+            @Override
+            public void write(byte[] b, int off, int len) throws IOException {
+                doPrint(new String(b, off, len), OUTPUT_TEXT_ATTR);
+            }
+
+            @Override
+            public void flush() throws IOException {
+                textPane.repaint();
+            }
+
+            @Override
+            public void write(int b) throws IOException {
+                write(new byte[]{(byte) b});
+            }
+        };
     }
 }

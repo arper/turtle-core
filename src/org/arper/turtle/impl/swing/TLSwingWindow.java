@@ -15,8 +15,15 @@ import javax.swing.OverlayLayout;
 import org.arper.turtle.impl.j2d.TLJ2DCanvas;
 import org.arper.turtle.impl.j2d.TLJ2DUtilities;
 import org.arper.turtle.impl.swing.plugins.TLSwingConsolePlugin;
+import org.arper.turtle.impl.swing.plugins.TLSwingHelpButtonPlugin;
 import org.arper.turtle.impl.swing.plugins.TLSwingPauseOverlayPlugin;
+import org.arper.turtle.impl.swing.plugins.TLSwingPlayPauseButtonPlugin;
+import org.arper.turtle.impl.swing.plugins.TLSwingPropertiesPlugin;
+import org.arper.turtle.impl.swing.plugins.TLSwingRestartButtonPlugin;
+import org.arper.turtle.impl.swing.plugins.TLSwingScreenshotButtonPlugin;
+import org.arper.turtle.impl.swing.plugins.TLSwingSettingsButtonPlugin;
 import org.arper.turtle.impl.swing.plugins.TLSwingToolbarPlugin;
+import org.arper.turtle.impl.swing.plugins.TLSwingTurtlePropertiesPlugin;
 import org.arper.turtle.ui.TLCanvas;
 import org.arper.turtle.ui.TLWindow;
 
@@ -24,7 +31,9 @@ import com.alee.laf.WebLookAndFeel;
 import com.alee.laf.panel.WebPanel;
 import com.alee.laf.rootpane.WebFrame;
 import com.alee.laf.scroll.WebScrollPane;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 
 @SuppressWarnings("serial")
@@ -32,9 +41,18 @@ public class TLSwingWindow extends WebFrame implements TLWindow {
 
 
     public static final List<Class<?>> DEFAULT_PLUGINS = ImmutableList.<Class<?>>of(
-            TLSwingPauseOverlayPlugin.class,
+            TLSwingToolbarPlugin.Top.class,
+            TLSwingPlayPauseButtonPlugin.class,
             TLSwingConsolePlugin.class,
-            TLSwingToolbarPlugin.class);
+            TLSwingRestartButtonPlugin.class,
+            TLSwingScreenshotButtonPlugin.class,
+            TLSwingSettingsButtonPlugin.class,
+            TLSwingPropertiesPlugin.class,
+            TLSwingHelpButtonPlugin.class,
+//            TLTopToolbarButtonsPlugin.class,
+            TLSwingPauseOverlayPlugin.class,
+//            TLSwingToolbarPlugin.class,
+            TLSwingTurtlePropertiesPlugin.class);
 
     private TLJ2DCanvas canvas;
     private JComponent pluginLayers;
@@ -102,11 +120,19 @@ public class TLSwingWindow extends WebFrame implements TLWindow {
     public void addPluginLayer(JComponent layer) {
         pluginLayers.add(layer, 0);
     }
+    
+    public JComponent getPluginLayers() {
+        return pluginLayers;
+    }
 
     public void fireSwingPluginEvent(String eventName, Object... args) {
         for (TLSwingPlugin plugin : plugins) {
             plugin.onSwingPluginEvent(this, eventName, args);
         }
+    }
+
+    public <T extends TLSwingPlugin> T getSwingPlugin(Class<T> pluginClass) {
+        return pluginClass.cast(Iterables.find(plugins, Predicates.instanceOf(pluginClass)));
     }
 
     private void layoutComponents() {
