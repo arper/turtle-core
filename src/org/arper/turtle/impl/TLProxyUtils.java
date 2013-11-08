@@ -2,6 +2,7 @@ package org.arper.turtle.impl;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.concurrent.Callable;
 
 import com.google.common.base.Supplier;
 import com.google.common.reflect.Reflection;
@@ -29,6 +30,18 @@ public class TLProxyUtils {
                     TLLogging.error("Caught exception during invocation", e);
                     return null;
                 }
+            }
+        });
+    }
+
+    public static <T> T proxyCallableForListenerEvents(Class<T> listenerClass,
+                                                       final Callable<?> callable,
+                                                       final Object retval) {
+        return Reflection.newProxy(listenerClass, new InvocationHandler() {
+            @Override
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                callable.call();
+                return retval;
             }
         });
     }

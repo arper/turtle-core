@@ -5,16 +5,22 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Insets;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentListener;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.concurrent.Callable;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
 import javax.swing.JToggleButton;
+import javax.swing.SwingUtilities;
 
+import org.arper.turtle.impl.TLProxyUtils;
 import org.arper.turtle.impl.TLSingleton;
 import org.arper.turtle.impl.swing.TLSwingPlugin;
 import org.arper.turtle.impl.swing.TLSwingStyles;
@@ -29,7 +35,7 @@ import com.alee.laf.text.WebTextPane;
 public class TLSwingConsolePlugin implements TLSwingPlugin {
 
     @Override
-    public void initSwingPlugin(TLSwingWindow window) {
+    public void initSwingPlugin(final TLSwingWindow window) {
         WebTextPane textPane = createOutputPane();
         WebTextField inputField = createInputField();
 
@@ -38,7 +44,7 @@ public class TLSwingConsolePlugin implements TLSwingPlugin {
         in = streamPair.in;
 
         final JComponent console = layoutConsole(inputField, textPane);
-        
+
         final JToggleButton consoleButton = new WebToggleButton("Console");
         consoleButton.setForeground(new Color(190, 190, 190));
         consoleButton.setPreferredSize(new Dimension(100, 38));
@@ -48,14 +54,31 @@ public class TLSwingConsolePlugin implements TLSwingPlugin {
         bottomBar.add(consoleButton);
         TLSwingStyles.setPainter(bottomBar, TLSwingStyles.getPanelPainter());
         window.getContentPane().add(bottomBar, BorderLayout.SOUTH);
-        
+
         final JComponent consoleFrame = makeResizable(console);
         consoleFrame.setPreferredSize(new Dimension(100, 100));
         consoleFrame.setBounds(100, 100, 300, 300);
-        window.addPluginLayer(TLSwingStyles.noLayout(consoleFrame));
-        
+
+        final JComponent parent = TLSwingStyles.noLayout(consoleFrame);
+        window.addPluginLayer(parent);
         consoleFrame.setVisible(false);
-        
+
+
+        Callable<Void> consoleAnchorFunction = new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                Point pos = SwingUtilities.convertPoint(consoleButton, 0, 0, parent);
+                pos.y -= consoleFrame.getHeight();
+                consoleFrame.setLocation(pos.x, pos.y);
+                return null;
+            }
+        };
+
+        window.addComponentListener(TLProxyUtils.proxyCallableForListenerEvents(
+                ComponentListener.class, consoleAnchorFunction, null));
+        consoleButton.addComponentListener(TLProxyUtils.proxyCallableForListenerEvents(
+                ComponentListener.class, consoleAnchorFunction, null));
+
         consoleButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -66,13 +89,14 @@ public class TLSwingConsolePlugin implements TLSwingPlugin {
 
     private InputStream in;
     private PrintStream out;
-    
+
     private JComponent makeResizable(JComponent comp) {
         JComponent parent = comp;
-        parent.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        new ComponentResizer(parent);
+        parent.setBorder(BorderFactory.createEmptyBorder(5, 0, 0, 5));
+        new ComponentResizer(new Insets(7, 0, 0, 7), parent);
         return parent;
     }
+
     private WebTextPane createOutputPane() {
         WebTextPane textPane = TLSwingStyles.transparent(new WebTextPane() {
             private static final long serialVersionUID = 1L;
@@ -97,7 +121,7 @@ public class TLSwingConsolePlugin implements TLSwingPlugin {
 
         return textField;
     }
-    
+
     private JComponent layoutConsole(WebTextField inputField, WebTextPane outputPane) {
 
         WebPanel comp = new WebPanel(new BorderLayout()) {

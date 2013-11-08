@@ -44,7 +44,7 @@ public class TLSwingToolbarPlugin implements TLSwingPlugin {
     public void initSwingPlugin(TLSwingWindow window) {
         this.window = window;
         initButtons();
-        
+
         JComponent tools = createToolbar();
         TLSwingStyles.setPainter(tools, TLSwingStyles.getPanelPainter());
 
@@ -67,10 +67,18 @@ public class TLSwingToolbarPlugin implements TLSwingPlugin {
                 return comp;
             }
         };
-        
+
         tools.setBackground(null);
         tools.setOpaque(false);
         tools.setLayout(new BoxLayout(tools, BoxLayout.X_AXIS));
+
+        tools.add(playPauseButton);
+        tools.add(restartButton);
+//        tools.add(Box.createHorizontalGlue());
+        tools.add(updateButton);
+        tools.add(helpButton);
+
+        tools.add(Box.createHorizontalGlue());
 
         tools.add(createToolbarButton("icons/play.png", "", "", Hotkey.A));
         tools.add(createToolbarButton("icons/pause.png", "", "", Hotkey.A));
@@ -80,16 +88,11 @@ public class TLSwingToolbarPlugin implements TLSwingPlugin {
         tools.add(createToolbarButton("icons/config.png", "", "", Hotkey.A));
         tools.add(createToolbarButton("icons/screenshot.png", "", "", Hotkey.A));
         tools.add(createToolbarButton("icons/properties.png", "", "", Hotkey.A));
-        
-//        tools.add(playPauseButton);
-//        tools.add(restartButton);
-//        tools.add(Box.createHorizontalGlue());
-//        tools.add(updateButton);
-//        tools.add(helpButton);
-        
+
+
         return TLSwingStyles.pad(tools, 2);
     }
-    
+
 
     private void initButtons() {
         playPauseButton = createToolbarButton(null, "", "Play/Pause", Hotkey.P);
@@ -116,7 +119,7 @@ public class TLSwingToolbarPlugin implements TLSwingPlugin {
             }
         });
 
-        helpButton = createToolbarButton("icons/console.png", "Help",
+        helpButton = createToolbarButton("icons/help.png", "Help",
                 "Help - Go to Online Documentation (http://stanford.edu/~alexryan/cgi-bin/turtledoc/)",
                 Hotkey.F1);
         helpButton.addActionListener(new ActionListener() {
@@ -210,7 +213,7 @@ public class TLSwingToolbarPlugin implements TLSwingPlugin {
                         "Could not update libraries: unknown library location.",
                         "Error updating libraries",
                         JOptionPane.ERROR_MESSAGE);
-            } 
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

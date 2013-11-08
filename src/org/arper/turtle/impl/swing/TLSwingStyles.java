@@ -44,7 +44,7 @@ public class TLSwingStyles {
                     return ImageIO.read(url);
                 }
             });
-    
+
     public static Painter<?> getBackgroundPainter() {
         try {
             return new TexturePainter<JComponent>(IMAGES_CACHE.get("styles/bg.png"));
@@ -53,10 +53,10 @@ public class TLSwingStyles {
             return null;
         }
     }
-    
+
     public static Painter<?> getPanelPainter() {
         try {
-            return new NinePatchIconPainter<>(IMAGES_CACHE.get("styles/panel.9.png"));
+            return new NinePatchIconPainter<JComponent>(IMAGES_CACHE.get("styles/panel.9.png"));
         } catch (ExecutionException e) {
             e.getCause().printStackTrace();
             return null;
@@ -77,7 +77,7 @@ public class TLSwingStyles {
             return null;
         }
     }
-    
+
     private static Painter<?> loadPainter(JComponent comp) throws IOException {
         if (comp instanceof JButton) {
             return getButtonPainter();
@@ -136,7 +136,7 @@ public class TLSwingStyles {
         comp.setBorder(BorderFactory.createEmptyBorder(top, left, bottom, right));
         return parent;
     }
-    
+
     public static JComponent noLayout(JComponent comp) {
         JComponent parent = transparent(new WebPanel());
         parent.setLayout(null);
