@@ -2,13 +2,11 @@ package org.arper.turtle.impl.swing.plugins;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -20,6 +18,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import javax.swing.JComponent;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
+import javax.swing.SwingConstants;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultCaret;
@@ -33,6 +32,7 @@ import org.arper.turtle.impl.swing.TLSwingStyles;
 import org.arper.turtle.impl.swing.TLSwingUtilities;
 import org.arper.turtle.impl.swing.TLSwingWindow;
 
+import com.alee.extended.panel.WebOverlay;
 import com.alee.laf.button.WebToggleButton;
 import com.alee.laf.panel.WebPanel;
 import com.alee.laf.scroll.WebScrollPane;
@@ -42,47 +42,47 @@ import com.alee.managers.hotkey.Hotkey;
 
 public class TLSwingConsolePlugin implements TLSwingPlugin {
 
+    private WebTextPane textPane;
+    private WebTextField inputField;
+
     @Override
     public void initSwingPlugin(final TLSwingWindow window) {
-        WebTextPane textPane = createOutputPane();
-        WebTextField inputField = createInputField();
-        
-        ConsoleImpl impl = new ConsoleImpl(inputField, textPane);
-        out = new PrintStream(impl.out, true);
-        in = impl.in;
+        textPane = createOutputPane();
+        inputField = createInputField();
 
         final JComponent console = layoutConsole(inputField, textPane);
 
         final JToggleButton consoleButton = new WebToggleButton();
-        TLSwingToolbarPlugin.styleToolbarButton(consoleButton, 
+        TLSwingToolbarPlugin.styleToolbarButton(consoleButton,
                 window, "icons/console.png", "Show/Hide Console", Hotkey.TAB);
 
-        final JComponent consoleFrame = TLSwingUtilities.makeResizable(console, 0, 5, 5, 0);
-        consoleFrame.setPreferredSize(new Dimension(100, 100));
-        consoleFrame.setBounds(100, 100, 300, 300);
-        consoleFrame.setLocation(100, 100);
-
-        window.addPluginLayer(TLSwingStyles.noLayout(consoleFrame));
-        consoleFrame.setVisible(false);
-
+        final WebOverlay consoleOverlay = new WebOverlay(TLSwingStyles.transparent(new WebPanel()));
+        consoleOverlay.addOverlay(console, SwingConstants.LEFT, SwingConstants.TOP);
+//
+//
+//        final JComponent consoleFrame = TLSwingUtilities.makeResizable(console, 0, 5, 5, 0);
+//        consoleFrame.setPreferredSize(new Dimension(100, 100));
+//        consoleFrame.setBounds(100, 100, 300, 300);
+//        consoleFrame.setLocation(100, 100);
+//
+        window.addPluginLayer(consoleOverlay);
+//        consoleFrame.setVisible(false);
+//
         consoleButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                consoleFrame.setVisible(consoleButton.isSelected());
+                consoleOverlay.setVisible(consoleButton.isSelected());
             }
         });
-        
-        TLSwingUtilities.anchorComponent(consoleFrame,
-                new Point2D.Double(0, 0),
-                window.getPluginLayers(),
-                new Point2D.Double(0, 0));
-        
+//
+//        TLSwingUtilities.anchorComponent(consoleFrame,
+//                new Point2D.Double(0, 0),
+//                window.getPluginLayers(),
+//                new Point2D.Double(0, 0));
+
         window.getSwingPlugin(TLSwingToolbarPlugin.Top.class).add(
                 consoleButton, BorderLayout.WEST);
     }
-
-    private InputStream in;
-    private PrintStream out;
 
     private WebTextPane createOutputPane() {
         WebTextPane textPane = TLSwingStyles.transparent(new WebTextPane() {
@@ -132,8 +132,9 @@ public class TLSwingConsolePlugin implements TLSwingPlugin {
     @Override
     public void onSwingPluginEvent(TLSwingWindow window, String name, Object... args) {
         if ("app_start".equals(name)) {
-            TLSingleton.getApplication().out = out;
-            TLSingleton.getApplication().in = in;
+            ConsoleImpl impl = new ConsoleImpl(inputField, textPane);
+            TLSingleton.getApplication().out = new PrintStream(impl.out, true);
+            TLSingleton.getApplication().in = impl.in;
         }
     }
 
@@ -148,7 +149,7 @@ public class TLSwingConsolePlugin implements TLSwingPlugin {
         OUTPUT_TEXT_ATTR = new SimpleAttributeSet();
         StyleConstants.setForeground(OUTPUT_TEXT_ATTR, Color.BLUE);
     }
-    
+
     private static class ConsoleImpl {
 
         private final JTextComponent textPane;

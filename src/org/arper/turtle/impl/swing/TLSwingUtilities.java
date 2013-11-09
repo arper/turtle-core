@@ -3,7 +3,6 @@ package org.arper.turtle.impl.swing;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.Graphics2D;
 import java.awt.GraphicsEnvironment;
 import java.awt.Insets;
 import java.awt.Point;
@@ -13,20 +12,21 @@ import java.awt.event.ComponentListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
-import java.awt.image.BufferedImage;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
-import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 import org.arper.turtle.impl.TLProxyUtils;
+
+import com.google.common.util.concurrent.SettableFuture;
 
 
 public class TLSwingUtilities {
@@ -60,12 +60,39 @@ public class TLSwingUtilities {
         }
     }
 
+    public static <T> Future<T> callOnAwtThread(final Callable<T> task) {
+        final SettableFuture<T> settable = SettableFuture.create();
+        runOnAwtThread(runnableForSettableFuture(settable, task), false);
+
+        return settable;
+    }
+
+    public static <T> Future<T> callOffAwtThread(final Callable<T> task) {
+        final SettableFuture<T> settable = SettableFuture.create();
+        runOffAwtThread(runnableForSettableFuture(settable, task));
+
+        return settable;
+    }
+
+    private static <T> Runnable runnableForSettableFuture(final SettableFuture<T> future, final Callable<T> task) {
+        return new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    future.set(task.call());
+                } catch (Throwable e) {
+                    future.setException(e);
+                }
+            }
+        };
+    }
+
     private static final Point coord(JComponent comp, Point2D weightedPos) {
         return new Point(
                 (int) Math.round(weightedPos.getX() * comp.getWidth()),
                 (int) Math.round(weightedPos.getY() * comp.getHeight()));
     }
-    
+
     public static void anchorComponent(final JComponent target,
             final Point2D targetPoint,
             final JComponent anchor,
@@ -74,11 +101,11 @@ public class TLSwingUtilities {
         Callable<Void> anchorFunction = new Callable<Void>() {
             @Override
             public Void call() throws Exception {
-                Point anchorPos = SwingUtilities.convertPoint(anchor, 
+                Point anchorPos = SwingUtilities.convertPoint(anchor,
                         coord(anchor, anchorPoint), target.getParent());
-                
+
                 Point targetPos = coord(target, targetPoint);
-                target.setLocation(anchorPos.x - targetPos.x, 
+                target.setLocation(anchorPos.x - targetPos.x,
                         anchorPos.y - targetPos.y);
                 return null;
             }
@@ -86,35 +113,25 @@ public class TLSwingUtilities {
 
         ComponentListener listener = TLProxyUtils.proxyCallableForListenerEvents(
                 ComponentListener.class, anchorFunction, null);
-        
+
         target.addComponentListener(listener);
         target.getParent().addComponentListener(listener);
         anchor.addComponentListener(listener);
     }
-    
 
-    public static JComponent makeResizable(JComponent comp, 
+
+    public static JComponent makeResizable(JComponent comp,
             int top, int right, int bottom, int left) {
         JComponent parent = comp;
         parent.setBorder(BorderFactory.createEmptyBorder(top, left, bottom, right));
         new ComponentResizer(new Insets(
-                top * 2, 
-                left * 2, 
-                bottom * 2, 
+                top * 2,
+                left * 2,
+                bottom * 2,
                 right * 2), parent);
         return parent;
     }
-    
-    public static final BufferedImage createFrameScreenshot(JFrame argFrame) {
-        Rectangle rec = argFrame.getBounds();
-        BufferedImage bufferedImage = new BufferedImage(rec.width, rec.height,
-                BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g = bufferedImage.createGraphics();
-        argFrame.paint(g);
-        g.dispose();
-        return bufferedImage;
-    }
-    
+
     private static final Executor OFF_AWT_EXECUTOR = Executors.newCachedThreadPool();
 
     public static void runOffAwtThread(Runnable r) {
@@ -124,7 +141,7 @@ public class TLSwingUtilities {
             OFF_AWT_EXECUTOR.execute(r);
         }
     }
-    
+
     protected static class ComponentResizer extends MouseAdapter
     {
         private final static Dimension MINIMUM_SIZE = new Dimension(10, 10);

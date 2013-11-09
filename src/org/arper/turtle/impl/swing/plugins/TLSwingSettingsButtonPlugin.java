@@ -5,7 +5,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Point2D;
 
-import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JSlider;
@@ -24,13 +23,13 @@ public class TLSwingSettingsButtonPlugin implements TLSwingPlugin {
 
     private JComponent settingsPanel;
     private JToggleButton settingsButton;
-    
+
     @Override
     public void initSwingPlugin(TLSwingWindow window) {
         settingsButton = new WebToggleButton();
-        TLSwingToolbarPlugin.styleToolbarButton(settingsButton, window, 
+        TLSwingToolbarPlugin.styleToolbarButton(settingsButton, window,
                 "icons/config.png", "Settings", Hotkey.F4);
-        
+
         settingsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
@@ -45,16 +44,16 @@ public class TLSwingSettingsButtonPlugin implements TLSwingPlugin {
         settingsPanel.add(new JLabel("Hello settings!"), BorderLayout.NORTH);
         settingsPanel.add(new JSlider(), BorderLayout.SOUTH);
         settingsPanel.setSize(settingsPanel.getPreferredSize());
-        
+
         window.getSwingPlugin(TLSwingToolbarPlugin.Top.class).add(settingsButton, BorderLayout.EAST);
         window.addPluginLayer(TLSwingStyles.noLayout(settingsPanel));
-        
+
         TLSwingUtilities.anchorComponent(
-                settingsPanel, new Point2D.Double(1, 0), 
+                settingsPanel, new Point2D.Double(1, 0),
                 window.getPluginLayers(), new Point2D.Double(1, 0));
         settingsPanel.setVisible(false);
     }
-    
+
     private void settingsAction() {
         settingsPanel.setVisible(settingsButton.isSelected());
     }
@@ -63,5 +62,5 @@ public class TLSwingSettingsButtonPlugin implements TLSwingPlugin {
     public void onSwingPluginEvent(TLSwingWindow window, String name, Object... args) {
         /* do nothing */
     }
-    
+
 }
