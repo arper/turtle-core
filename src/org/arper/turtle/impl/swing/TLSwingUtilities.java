@@ -96,7 +96,9 @@ public class TLSwingUtilities {
     public static void anchorComponent(final JComponent target,
             final Point2D targetPoint,
             final JComponent anchor,
-            final Point2D anchorPoint) {
+            final Point2D anchorPoint,
+            final boolean xAnchor,
+            final boolean yAnchor) {
 
         Callable<Void> anchorFunction = new Callable<Void>() {
             @Override
@@ -105,8 +107,10 @@ public class TLSwingUtilities {
                         coord(anchor, anchorPoint), target.getParent());
 
                 Point targetPos = coord(target, targetPoint);
-                target.setLocation(anchorPos.x - targetPos.x,
-                        anchorPos.y - targetPos.y);
+                targetPos.setLocation(
+                        xAnchor? anchorPos.x - targetPos.x : target.getX(),
+                        yAnchor? anchorPos.y - targetPos.y : target.getY());
+                target.setLocation(targetPos);
                 return null;
             }
         };

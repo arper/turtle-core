@@ -9,12 +9,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
 import javax.imageio.ImageIO;
+import javax.imageio.stream.FileImageOutputStream;
 
 import org.arper.turtle.impl.swing.TLSwingPlugin;
 import org.arper.turtle.impl.swing.TLSwingUtilities;
@@ -83,8 +84,8 @@ public class TLSwingScreenshotButtonPlugin implements TLSwingPlugin {
     private void screenshotAction() {
         TLSwingUtilities.assertOffAwtThread();
 
-        File file = new File("screenshot-"
-                + DateFormat.getDateTimeInstance().format(new Date())
+        File file = new File("screenshot."
+                + new SimpleDateFormat("MM-dd HHmmss").format(new Date())
                 + ".png");
 
         BufferedImage image;
@@ -98,7 +99,7 @@ public class TLSwingScreenshotButtonPlugin implements TLSwingPlugin {
 
         if (image != null) {
             try {
-                ImageIO.write(image, "png", file);
+                ImageIO.write(image, "png", new FileImageOutputStream(file));
             } catch (Exception e) {
                 /* TODO: exception handling */
                 e.printStackTrace();

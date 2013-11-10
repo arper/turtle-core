@@ -11,7 +11,7 @@ import com.google.common.collect.Lists;
 
 public class TLSwingPluginLoader {
 
-    public static List<TLSwingPlugin> loadPluginsForClasses(Iterable<Class<?>> pluginClasses) {
+    public static List<TLSwingPlugin> loadPluginsForClasses(Iterable<? extends Class<?>> pluginClasses) {
         List<TLSwingPlugin> loaded = Lists.newArrayListWithCapacity(
                 Iterables.size(pluginClasses));
         for (Class<?> pluginClass : pluginClasses) {

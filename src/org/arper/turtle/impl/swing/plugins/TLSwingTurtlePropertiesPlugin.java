@@ -24,7 +24,7 @@ public class TLSwingTurtlePropertiesPlugin implements TLSwingPlugin {
         
         propertiesControlToggle = createOverlayControlButton();
         
-        window.addPluginLayer(TLSwingStyles.noLayout(propertiesOverlay));
+        window.addViewportLayer(TLSwingStyles.noLayout(propertiesOverlay));
     }
     
     private WebToggleButton createOverlayControlButton() {

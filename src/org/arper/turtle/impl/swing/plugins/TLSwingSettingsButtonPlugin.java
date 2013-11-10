@@ -38,7 +38,7 @@ public class TLSwingSettingsButtonPlugin implements TLSwingPlugin {
         });
 
         settingsPanel = new WebPanel(false);
-//        settingsPanel.setBorder(BorderFactory.create(5, 5, 5, 5));
+        
         TLSwingStyles.setPainter(settingsPanel, TLSwingStyles.getPanelPainter());
         settingsPanel.setLayout(new BorderLayout());
         settingsPanel.add(new JLabel("Hello settings!"), BorderLayout.NORTH);
@@ -46,11 +46,13 @@ public class TLSwingSettingsButtonPlugin implements TLSwingPlugin {
         settingsPanel.setSize(settingsPanel.getPreferredSize());
 
         window.getSwingPlugin(TLSwingToolbarPlugin.Top.class).add(settingsButton, BorderLayout.EAST);
-        window.addPluginLayer(TLSwingStyles.noLayout(settingsPanel));
+        window.addViewportLayer(TLSwingStyles.noLayout(settingsPanel));
 
         TLSwingUtilities.anchorComponent(
                 settingsPanel, new Point2D.Double(1, 0),
-                window.getPluginLayers(), new Point2D.Double(1, 0));
+                settingsButton, new Point2D.Double(1, 0),
+                true,
+                true);
         settingsPanel.setVisible(false);
     }
 

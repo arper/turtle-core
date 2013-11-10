@@ -22,7 +22,7 @@ public class TLSwingPauseOverlayPlugin implements TLSwingPlugin {
     public void initSwingPlugin(TLSwingWindow window) {
         pauseOverlayComponent = createPauseOverlay();
 
-        window.addPluginLayer(pauseOverlayComponent);
+        window.addViewportLayer(pauseOverlayComponent);
     }
 
     private JComponent pauseOverlayComponent;

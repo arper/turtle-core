@@ -1,10 +1,13 @@
 package org.arper.turtle.impl.swing;
 
 import java.awt.BorderLayout;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Toolkit;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.util.List;
+import java.util.Map;
 
 import javax.imageio.ImageIO;
 import javax.swing.JComponent;
@@ -28,7 +31,6 @@ import org.arper.turtle.ui.TLCanvas;
 import org.arper.turtle.ui.TLWindow;
 
 import com.alee.laf.WebLookAndFeel;
-import com.alee.laf.panel.WebPanel;
 import com.alee.laf.rootpane.WebFrame;
 import com.alee.laf.scroll.WebScrollPane;
 import com.google.common.base.Predicates;
@@ -40,22 +42,26 @@ import com.google.common.collect.Iterables;
 public class TLSwingWindow extends WebFrame implements TLWindow {
 
 
-    public static final List<Class<?>> DEFAULT_PLUGINS = ImmutableList.<Class<?>>of(
-            TLSwingToolbarPlugin.Top.class,
-            TLSwingPlayPauseButtonPlugin.class,
-            TLSwingConsolePlugin.class,
-            TLSwingRestartButtonPlugin.class,
-            TLSwingScreenshotButtonPlugin.class,
-            TLSwingSettingsButtonPlugin.class,
-            TLSwingPropertiesPlugin.class,
-            TLSwingHelpButtonPlugin.class,
-//            TLTopToolbarButtonsPlugin.class,
-            TLSwingPauseOverlayPlugin.class,
-//            TLSwingToolbarPlugin.class,
-            TLSwingTurtlePropertiesPlugin.class);
+    public static final List<Class<? extends TLSwingPlugin>> DEFAULT_PLUGINS = 
+            ImmutableList.<Class<? extends TLSwingPlugin>>of(
+                    TLSwingToolbarPlugin.Top.class,
+                    TLSwingPlayPauseButtonPlugin.class,
+                    TLSwingConsolePlugin.class,
+                    TLSwingRestartButtonPlugin.class,
+                    TLSwingScreenshotButtonPlugin.class,
+                    TLSwingSettingsButtonPlugin.class,
+                    TLSwingPropertiesPlugin.class,
+                    TLSwingHelpButtonPlugin.class,
+                    //            TLTopToolbarButtonsPlugin.class,
+                    TLSwingPauseOverlayPlugin.class,
+                    //            TLSwingToolbarPlugin.class,
+                    TLSwingTurtlePropertiesPlugin.class
+                    );
 
     private TLJ2DCanvas canvas;
-    private JComponent pluginLayers;
+    private JComponent viewportLayers;
+    private JComponent baseLayer;
+    private JComponent windowLayers;
 
     private final List<TLSwingPlugin> plugins;
     private boolean firstDisplay = true;
@@ -64,12 +70,13 @@ public class TLSwingWindow extends WebFrame implements TLWindow {
         try {
             WebLookAndFeel.install();
             WebLookAndFeel.setDecorateAllWindows(!TLJ2DUtilities.isMacOS);
+            TLSwingStyles.customizeBasicLookAndFeel();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public TLSwingWindow(int canvasWidth, int canvasHeight, Iterable<Class<?>> pluginClasses) {
+    public TLSwingWindow(int canvasWidth, int canvasHeight, Iterable<? extends Class<?>> pluginClasses) {
         canvas = new TLJ2DCanvas(canvasWidth, canvasHeight);
         plugins = TLSwingPluginLoader.loadPluginsForClasses(pluginClasses);
         
@@ -117,12 +124,16 @@ public class TLSwingWindow extends WebFrame implements TLWindow {
                 DEFAULT_PLUGINS);
     }
 
-    public void addPluginLayer(JComponent layer) {
-        pluginLayers.add(layer, 0);
+    public void addViewportLayer(JComponent layer) {
+        viewportLayers.add(layer, 0);
     }
     
-    public JComponent getPluginLayers() {
-        return pluginLayers;
+    public JComponent getBaseWindowLayer() {
+        return baseLayer;
+    }
+    
+    public void addOverlay(JComponent overlay) {
+        windowLayers.add(overlay, 0);
     }
 
     public void fireSwingPluginEvent(String eventName, Object... args) {
@@ -140,23 +151,49 @@ public class TLSwingWindow extends WebFrame implements TLWindow {
         JScrollPane canvasPane = TLSwingStyles.transparent(new WebScrollPane(canvas, false, false));
 
         /* Layering */
-        pluginLayers = TLSwingStyles.transparent(new WebPanel()); // TLJ2DStyles.styled(new WebPanel());
-        pluginLayers.setLayout(new OverlayLayout(pluginLayers));
-        pluginLayers.add(canvasPane);
+        viewportLayers = TLSwingStyles.newTransparentPanel(); // TLJ2DStyles.styled(new WebPanel());
+        viewportLayers.setLayout(new OverlayLayout(viewportLayers));
+        viewportLayers.add(canvasPane);
 
+        windowLayers = TLSwingStyles.newTransparentPanel();
+        windowLayers.setLayout(new OverlayLayout(windowLayers));
+        
+        baseLayer = TLSwingStyles.newTransparentPanel();
+        baseLayer.setLayout(new BorderLayout());
+        baseLayer.add(viewportLayers, BorderLayout.CENTER);
+
+        addOverlay(baseLayer);
         getContentPane().setLayout(new BorderLayout());
-        getContentPane().add(pluginLayers, BorderLayout.CENTER);
+        getContentPane().add(windowLayers, BorderLayout.CENTER);
     }
 
     private void setWindowIcon(String path) {
         try {
             setIconImage(ImageIO.read(ClassLoader.getSystemResource(path)));
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            /* TODO: exception handling */
+            e.printStackTrace();
+        }
     }
 
     @Override
     public TLCanvas getCanvas() {
         return canvas;
+    }
+
+    @Override
+    public void paint(Graphics g) {
+        Graphics2D g2d = (Graphics2D) g;
+        Map<?,?> desktopHints = (Map<?,?>) Toolkit.getDefaultToolkit()
+                .getDesktopProperty("awt.font.desktophints");
+        if (desktopHints != null) {
+            g2d.addRenderingHints(desktopHints);
+        }
+//        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, 
+//                RenderingHints.VALUE_RENDER_QUALITY);
+//        g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, 
+//                RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+        super.paint(g);
     }
 
 }

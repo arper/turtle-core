@@ -3,6 +3,7 @@ package org.arper.turtle.impl.swing;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Font;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -15,6 +16,8 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.text.MutableAttributeSet;
+import javax.swing.text.StyleConstants;
 
 import com.alee.extended.painter.NinePatchIconPainter;
 import com.alee.extended.painter.NinePatchStatePainter;
@@ -30,6 +33,11 @@ import com.google.common.collect.ImmutableMap;
 
 public class TLSwingStyles {
 
+    public static void customizeBasicLookAndFeel() {
+        com.alee.laf.StyleConstants.fieldFocusColor = new Color(255, 167, 79);
+        com.alee.laf.StyleConstants.transparentFieldFocusColor = new Color(255, 167, 79);
+    }
+    
     private static final LoadingCache<String, BufferedImage> IMAGES_CACHE = CacheBuilder.newBuilder()
             .concurrencyLevel(2)
             .weakValues()
@@ -57,6 +65,15 @@ public class TLSwingStyles {
     public static Painter<?> getPanelPainter() {
         try {
             return new NinePatchIconPainter<JComponent>(IMAGES_CACHE.get("styles/panel.9.png"));
+        } catch (ExecutionException e) {
+            e.getCause().printStackTrace();
+            return null;
+        }
+    }
+
+    public static Painter<?> getPanelPopupPainter() {
+        try {
+            return new NinePatchIconPainter<JComponent>(IMAGES_CACHE.get("styles/popup.9.png"));
         } catch (ExecutionException e) {
             e.getCause().printStackTrace();
             return null;
@@ -165,6 +182,10 @@ public class TLSwingStyles {
         }
         return comp;
     }
+    
+    public static WebPanel newTransparentPanel() {
+        return transparent(new WebPanel());
+    }
 
     public static void setPainter(Component comp, Painter<?> painter) {
         if (painter == null || !(comp instanceof JComponent)) {
@@ -178,5 +199,12 @@ public class TLSwingStyles {
             e.printStackTrace();
             PainterSupport.installPainter( (JComponent) comp, painter);
         }
+    }
+    
+    public static void setFontStyles(MutableAttributeSet attributes, Font font) {
+        StyleConstants.setFontFamily(attributes, font.getFamily());
+        StyleConstants.setFontSize(attributes, font.getSize());
+        StyleConstants.setBold(attributes, font.isBold());
+        StyleConstants.setItalic(attributes, font.isItalic());
     }
 }

@@ -3,6 +3,7 @@ package org.arper.turtle.impl.swing.plugins;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -13,7 +14,7 @@ import org.arper.turtle.impl.swing.TLSwingPlugin;
 import org.arper.turtle.impl.swing.TLSwingWindow;
 
 import com.alee.laf.button.WebButton;
-import com.alee.managers.hotkey.Hotkey;
+import com.alee.managers.hotkey.HotkeyData;
 
 public class TLSwingPlayPauseButtonPlugin implements TLSwingPlugin {
 
@@ -32,7 +33,7 @@ public class TLSwingPlayPauseButtonPlugin implements TLSwingPlugin {
 
     private void initComponents() {
         playPauseButton = TLSwingToolbarPlugin.createToolbarButton(window, 
-                null, "Play/Pause", Hotkey.P);
+                null, "Play/Pause", new HotkeyData(false, false, true, KeyEvent.VK_SPACE));
 
         try {
             playIcon = new ImageIcon(ImageIO.read(ClassLoader.getSystemResource("icons/play.png")));

@@ -51,7 +51,7 @@ public abstract class TLSwingToolbarPlugin implements TLSwingPlugin {
         JComponent tools = createToolbar();
         TLSwingStyles.setPainter(tools, TLSwingStyles.getPanelPainter());
         
-        window.getContentPane().add(tools, getDirection());
+        window.getBaseWindowLayer().add(tools, getDirection());
     }
     
     public void add(JComponent comp, String direction) {
@@ -101,7 +101,7 @@ public abstract class TLSwingToolbarPlugin implements TLSwingPlugin {
         TLSwingStyles.applyStyle(b);
         HotkeyManager.registerHotkey (window, b, h, 
                 new ButtonHotkeyRunnable ( b, 50 ), TooltipWay.trailing );
-        TooltipManager.setTooltip ( b, tooltip, TooltipWay.down, 0 );
+        TooltipManager.setTooltip ( b, tooltip, TooltipWay.down, 300 );
 
         Dimension size = new Dimension(44, 38);
         b.setPreferredSize(size);
