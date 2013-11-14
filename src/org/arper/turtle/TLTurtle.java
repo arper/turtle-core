@@ -5,13 +5,13 @@ import java.awt.geom.Point2D;
 import java.util.List;
 
 import org.arper.turtle.config.TLAnglePolicy;
-import org.arper.turtle.impl.TLAction;
-import org.arper.turtle.impl.TLActions;
-import org.arper.turtle.impl.TLRenderer;
-import org.arper.turtle.impl.TLSimulator;
-import org.arper.turtle.impl.TLSingleton;
-import org.arper.turtle.impl.TLTurtleState;
-import org.arper.turtle.impl.swing.TLSwingWindow;
+import org.arper.turtle.internal.TLAction;
+import org.arper.turtle.internal.TLActions;
+import org.arper.turtle.internal.TLRenderer;
+import org.arper.turtle.internal.TLSimulator;
+import org.arper.turtle.internal.TLSingleton;
+import org.arper.turtle.internal.TLTurtleState;
+import org.arper.turtle.internal.swing.TLSwingWindow;
 import org.arper.turtle.ui.TLCanvas;
 
 import com.google.common.base.Preconditions;

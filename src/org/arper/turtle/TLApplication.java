@@ -2,13 +2,13 @@ package org.arper.turtle;
 
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.concurrent.Callable;
 
 import org.arper.turtle.config.TLApplicationConfig;
-import org.arper.turtle.controller.TLController;
 import org.arper.turtle.controller.TLObjective;
-import org.arper.turtle.impl.TLContext;
-import org.arper.turtle.impl.TLSingleton;
-import org.arper.turtle.impl.swing.TLSwingUtilities;
+import org.arper.turtle.internal.TLContext;
+import org.arper.turtle.internal.TLSingleton;
+import org.arper.turtle.internal.swing.TLSwingUtilities;
 
 import com.google.common.base.Preconditions;
 
@@ -72,16 +72,10 @@ public final class TLApplication {
         return context;
     }
 
-    public void startController(final TLController controller, final Object... args) {
-        context.runInControllerThread(new Runnable() {
-            @Override
-            public void run() {
-                controller.run(TLApplication.this, args);
-            }
-        }, "TLSimulationThread-" + controller.getClass().getSimpleName());
-    }
+    public void startObjective(final TLObjective objective,
+                               final TLTurtle[] objectiveTurtles,
+                               final Object[] args) {
 
-    public void startObjective(final TLObjective objective, final TLTurtle[] objectiveTurtles, final Object[] args) {
         int turtleCount = objective.getObjectiveTurtleCount();
 
         Preconditions.checkArgument(objectiveTurtles.length == turtleCount,
@@ -89,13 +83,16 @@ public final class TLApplication {
                 args.length, turtleCount);
 
         for (int i = 0; i < turtleCount; ++i) {
-            String threadName = "TLObjective-" + objective.getClass().getSimpleName() + "-Thread-" + i;
+            final String threadName = String.format("TLObjective-%s-Thread-%d",
+                    objective.getClass().getSimpleName(),
+                    i);
             final int turtleIndex = i;
 
-            context.runInControllerThread(new Runnable() {
+            context.submitTask(new Callable<Void>() {
                 @Override
-                public void run() {
+                public Void call() {
                     objective.runTurtle(turtleIndex, TLApplication.this, objectiveTurtles, args);
+                    return null;
                 }
             }, threadName);
         }
@@ -109,7 +106,8 @@ public final class TLApplication {
 
         TLTurtle[] turtles = new TLTurtle[turtleCount];
         for (int i = 0; i < turtleCount; ++i) {
-            turtles[i] = context.createTurtle();
+            turtles[i] = new TLTurtle();
+            context.registerTurtle(turtles[i]);
         }
 
         startObjective(objective, turtles, args);

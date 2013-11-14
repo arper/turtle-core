@@ -4,7 +4,7 @@ import java.awt.Color;
 import java.awt.Font;
 
 import org.arper.turtle.TLTurtle;
-import org.arper.turtle.impl.TLRenderer;
+import org.arper.turtle.internal.TLRenderer;
 
 public interface TLCanvas {
     TLRenderer getRenderer(TLTurtle turtle);
